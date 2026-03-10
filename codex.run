@@ -236,6 +236,7 @@ add_ro () {  # Usage: add_ro SRC DST
 del_path $HOME/bin      # Do not run the codex script (again).
 CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$CODEX_WORKSPACE'%/opt/ext4/nvme2/codex/workspace%')"
 echo "CODEX_COMMAND = $CODEX_COMMAND"
+CODEX_THREAD_ID=
 # This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting codex.
 COMMAND="$HOME_CODEX/.local/bin/start_codex"
 # Determine CODEX_MODE.
@@ -251,6 +252,9 @@ elif [ "$#" -ge 1 ] && [ "$1" == "bash" ]; then
   shift
 elif [ "$#" -eq 1 ] && [[ $1 == "plan" || $1 == "planner" ]]; then
   CODEX_MODE="planner"
+  if [ -l "$PROJECTDIR/AAP/planner/id" ]; then
+    CODEX_THREAD_ID=$(readlink $PROJECTDIR/AAP/planner/id)
+  fi
 elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
   # Append `resume ...` to the default arguments.
   CODEX_THREAD_ID="${2}"
@@ -264,13 +268,13 @@ elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
   fi
 else
   CODEX_MODE=coder
+  if [[ -L "$PROJECTDIR/AAP/coder/id" ]]; then
+    CODEX_THREAD_ID=$(basename $(readlink $PROJECTDIR/AAP/coder/id))
+  fi
 fi
 
-# Create Agent Assisted Planner (AAP) directory.
-mkdir -p $PROJECTDIR/AAP
-for d in planner coder ThreadID; do
-  mkdir -p $PROJECTDIR/AAP/$d
-done
+# Setup Agent Assisted Planner (AAP) project.
+setup_aap
 
 # Construct roots_json.
 if [[ $CODEX_MODE == "planner" ]]; then
@@ -300,7 +304,7 @@ if [[ $CODEX_MODE == "shell" ]]; then
 elif [[ $CODEX_MODE == "bash" ]]; then
   shift
   command_args=("$@")
-elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
+elif [ -n "$CODEX_THREAD_ID" ]; then
   command_args+=(resume "$CODEX_THREAD_ID")
 fi
 
@@ -423,6 +427,8 @@ if [[ $CODEX_MODE == "planner" ]]; then
   )
 else
   bwrap_args+=(
+    # Unless this is the planner, we can not write to $PLANROOT.
+    --ro-bind "$CODEX_WORKSPACE/AAP" "$HOME_CODEX/workspace/AAP"
     # Change directory to the repository (Codex automatically has write access here because of --sandbox workspace-write).
     --chdir "$HOME_CODEX/workspace/$CODEX_REPOBASE/$CODEX_DIRECTORY"
   )
