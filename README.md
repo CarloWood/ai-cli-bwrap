@@ -116,6 +116,8 @@ function project_environment {
 
   # To satisfy the sanity check at the top of `codex.run`.
   export REPOROOT="$CODEX_WORKSPACE/$CODEX_REPOBASE"
+  # The repository for the planner.
+  export PLANROOT="$CODEX_WORKSPACE/AAP"
 
   source $TOPPROJECT/env.compiler
 
@@ -136,13 +138,21 @@ function project_environment {
 
   export CPPFLAGS LDFLAGS CFLAGS CXXFLAGS
 
+  # Set a proper tags file.
+  CTAGS_FILE="$BUILDDIR/tags"
+  export CTAGS_FILE
+
   if [ -n "$CODEX_INSIDE_ENVIRONMENT" ]; then
     # Give codex its own build directory.
     BUILDDIR="$CODEX_WORKSPACE/codex-build"
-    if [[ $CODEX_SHELL = "no" ]]; then
+    if [[ $CODEX_MODE == "coder" || $CODEX_MODE == "planner" ]]; then
       # Only use a different committer name if it is really Codex that does the commit.
       export GIT_COMMITTER_NAME='Daniel Codex'
       export GIT_AUTHOR_NAME='Daniel Codex'
+    fi
+    # Set CTAGS_FILE to a writable location.
+    if [[ $CODEX_MODE == "planner" ]]; then
+      CTAGS_FILE="$CODEX_WORKSPACE/AAP/planner/tags"
     fi
 
     # Make compilation less verbose.
@@ -154,6 +164,137 @@ function project_environment {
   export CMAKE_CONFIG
   export AUTOGEN_CMAKE_ONLY=1
   export LIBCWD_NO_STARTUP_MSGS=1
+}
+
+# Setup Agent Assisted Planner (AAP) project.
+setup_aap ()
+{
+  local aap_dir="$PROJECTDIR/AAP"
+  local name="$(basename "$REPOROOT")"
+  # Remove .git extension, if any.
+  name="${name%.git}"
+
+  local changed=0
+  local created_repo=0
+
+  mkdir -p "$aap_dir" || exit 1
+  pushd "$aap_dir"
+
+  if [[ ! -d .git ]]; then
+    git init || exit 1
+    created_repo=1
+    changed=1
+  fi
+
+  # Ensure we are on a sensible branch.
+  if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+    if ! git rev-parse --verify refs/heads/master >/dev/null 2>&1; then
+      git checkout -b master || exit 1
+    else
+      git checkout master || exit 1
+    fi
+  fi
+
+  # Ensure remote "github" exists (assume repo name is "<NAME>-AAP" under CarloWood).
+  if ! git remote get-url github >/dev/null 2>&1; then
+    git remote add github "${GITHUB_URL_PREFIX}${name}-AAP.git" || exit 1
+    changed=1
+  fi
+
+  # Ensure submodule "agents-common" exists and is registered.
+  if [[ -d agents-common ]]; then
+    # If it exists but isn't registered as a submodule yet, add/register it.
+    if [[ ! -f .gitmodules ]] || ! git config -f .gitmodules --get submodule.agents-common.url >/dev/null 2>&1; then
+      rm -rf agents-common || exit 1
+      git submodule add "https://github.com/CarloWood/agents-common.git" agents-common || exit 1
+      changed=1
+    fi
+  else
+    if [[ -f .gitmodules ]] && git config -f .gitmodules --get submodule.agents-common.url >/dev/null 2>&1; then
+      git submodule update --init --recursive agents-common || exit 1
+    else
+      git submodule add "https://github.com/CarloWood/agents-common.git" agents-common || exit 1
+      changed=1
+    fi
+  fi
+
+  # Make sure submodule content is present.
+  git submodule update --init --recursive agents-common || exit 1
+
+  # Fix remote of agents-common submodule.
+  if [[ $changed -ne 0 ]]; then
+    pushd agents-common
+    if ! git remote get-url github >/dev/null 2>&1; then
+      git remote rename origin github
+      git remote set-url github "${GITHUB_URL_PREFIX}agents-common.git" "https://github.com/CarloWood/agents-common.git" || exit 1
+    fi
+    popd
+  fi
+
+  # Create required directories (and make them trackable).
+  local d
+  for d in planner coder ThreadID; do
+    if [[ ! -d "$d" ]]; then
+      mkdir -p "$d" || exit 1
+      changed=1
+    fi
+    if [[ ! -e "$d/.gitkeep" ]]; then
+      : > "$d/.gitkeep" || exit 1
+      changed=1
+    fi
+  done
+
+  # Ensure AGENTS.md symlink.
+  local agents_target="agents-common/planner/AGENTS.md"
+  if [[ -L AGENTS.md ]]; then
+    if [[ "$(readlink AGENTS.md)" != "$agents_target" ]]; then
+      ln -sf "$agents_target" AGENTS.md || exit 1
+      changed=1
+    fi
+  elif [[ -e AGENTS.md ]]; then
+    rm -f AGENTS.md || exit 1
+    ln -s "$agents_target" AGENTS.md || exit 1
+    changed=1
+  else
+    ln -s "$agents_target" AGENTS.md || exit 1
+    changed=1
+  fi
+
+  # Ensure .gitignore.
+  if [[ ! -e .gitignore ]]; then
+    cp -f "agents-common/AAP-gitignore" .gitignore || exit 1
+    changed=1
+  fi
+
+  # Ensure README.md.
+  if [[ ! -e README.md ]]; then
+    {
+      printf '# %s-AAP\n' "$name"
+      printf 'Agents Assisted Plan for https://github.com/CarloWood/%s/\n' "$name"
+    } > README.md || exit 1
+    changed=1
+  fi
+
+  # Stage/commit/push if we created/changed anything.
+  if [[ $changed -ne 0 ]]; then
+    git add -A || exit 1
+
+    # Only commit if there is something staged (or repo was created).
+    if [[ $created_repo -ne 0 ]] || ! git diff --cached --quiet; then
+      git commit -m "Setup Agent Assisted Planner (AAP) project." || exit 1
+    fi
+
+    local branch
+    branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
+    if [[ -z "$branch" ]]; then
+      branch="master"
+    fi
+
+    echo "Pushing to $(git remote get-url github)..."
+    git push -u github "$branch" || exit 1
+  fi
+
+  popd
 }
 
 # Only load Copilot for these extensions.
@@ -316,7 +457,7 @@ findname() {
     files+=( "$file" )
     strings+=( "$rest" )
   done < <(
-    readtags -t "$BUILDDIR/tags" -E "$query" \
+    readtags -t "$CTAGS_FILE" -E "$query" \
       | sed -r 's%^[^\t]*\t(.*)\t/\^((\\/|\$[^/]|[^/$])*)(\$/|/).*%\1|\2%;s%\\([\\/;])%\1%g'
   )
 
@@ -479,7 +620,7 @@ findsymbol() {
 
     printf "%s\tkind%s%s\tscope%s%s\tlocation%s%s:%s\tcode%s\"%s\"\n" \
            "$tag" "$equals" "$kind" "$equals" "$scope" "$equals" "$disp_file" "$line" "$equals" "$pattern"
-  done < <(readtags -t "$BUILDDIR/tags" $grep_opts -e "$name")
+  done < <(readtags -t "$CTAGS_FILE" $grep_opts -e "$name")
 }
 
 function set_compiler_env()
@@ -561,6 +702,25 @@ function configure ()
   fi
 }
 
+function create_ctags_file ()
+{
+  if [[ -z $BUILDDIR ]]; then
+    echo "BUILDDIR not set."
+    return 1
+  fi
+  if [[ ! -d $BUILDDIR ]]; then
+    mkdir -p "$BUILDDIR"
+  fi
+  if [[ -z $CTAGS_FILE ]]; then
+    echo "Warning: CTAGS_FILE not set, using \$BUILDDIR/ctags."
+    export CTAGS_FILE="$BUILDDIR/ctags"
+  fi
+  ctags -o "$CTAGS_FILE" --language-force=C++ `s`
+  if [[ $1 != no_gentags && -z $CODEX_INSIDE_ENVIRONMENT ]]; then
+    gentags "$CTAGS_FILE" | sort -u > $BUILDDIR/tags.vim
+  fi
+}
+
 function make ()
 {
   CURDIR=$(pwd)
@@ -583,8 +743,7 @@ function make ()
       fi
       ;;
     ctags|tags)
-      cd $BUILDDIR && ctags --language-force=C++ `s`
-      gentags $BUILDDIR/tags | sort -u > $BUILDDIR/tags.vim
+      create_ctags_file
       ;;
     *)
       if [ -n "$CMAKE_CONFIGURE_OPTIONS" ]; then

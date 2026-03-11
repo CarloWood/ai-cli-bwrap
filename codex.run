@@ -320,6 +320,7 @@ mapfile -d '' -t ETC_FILES < <(
   add_ro /etc/ssl
   add_ro /etc/ca-certificates
   add_ro /etc/remountd
+  add_ro /etc/fonts
   echo -n
 )
 
