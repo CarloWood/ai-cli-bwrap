@@ -1,0 +1,81 @@
+# File: /etc/conf.d/netns/nft-nscodex.rules
+#
+# Goal: Inside netns "nscodex", make applications that query 127.0.0.1:53
+#       talk to the host's resolver, while keeping a default-drop posture.
+#       Also allow egress for github.com.
+#
+# Topology:
+#   - Netns side veth:   ve-nscodex2 (10.0.2.2/24).
+#   - Host side veth:    ve-nscodex1 (10.0.2.1/24).
+# Traffic flow:
+#   1) In nscodex, OUTPUT-DNAT maps dst 127.0.0.1:53 → 10.0.2.1:53.
+#   2) In nscodex, POSTROUTING-SNAT maps src 127.0.0.1 → 10.0.2.2 for DNS, so replies will return to ve-nscodex2.
+#   3) On the host, PREROUTING-DNAT (separate rules) maps 10.0.2.1:53 → 127.0.0.1:53 to reach the local resolver.
+#
+# Notes:
+#   - This file is loaded *inside* the nscodex netns (host rules are defined in nft-nscodex-outside.rules).
+#   - We only allow DNS egress to the host and github related egress; everything else is dropped by default.
+#   - IP numbers are added to chatgpt_ipv4 and other_https_ipv4 by running /usr/local/sbin/nft_add_allowed_IPs.sh.
+
+# Loading this file replaces all potentially already existing rules.
+flush ruleset
+
+table inet nscodex_firewall {
+  set github_ipv4 {
+    type ipv4_addr
+    flags interval
+    elements = { 192.30.252.0/22, 185.199.108.0/22, 140.82.112.0/20, 143.55.64.0/20, 135.234.59.224/28, 20.99.172.64/28 }
+  }
+
+  set chatgpt_ipv4 {
+    type ipv4_addr
+  }
+
+  set other_https_ipv4 {
+    type ipv4_addr
+  }
+
+  chain INPUT {
+    type filter hook input priority filter; policy drop;  # Default deny on ingress.
+
+    ct state invalid drop                                    comment "Drop invalid packets early."
+    iif "lo" accept                                          comment "Allow all input from loopback."
+    ct state established,related accept                      comment "Allow replies to established or related flows."
+  }
+
+  chain OUTPUT {
+    type filter hook output priority filter; policy drop;  # Default deny on egress.
+
+    oif "lo" accept                                          comment "Allow all output to loopback."
+    ct state established,related accept                      comment "Allow egress packets that belong to established flows."
+
+    oifname "ve-nscodex2" udp dport 53 accept                comment "Permit UDP DNS to the host over ve-nscodex2."
+    oifname "ve-nscodex2" tcp dport 53 accept                comment "Permit TCP DNS (fallback/large answers) to the host."
+
+    oifname "ve-nscodex2" ip daddr @chatgpt_ipv4 tcp dport 443 accept                  comment "Allow connections to ChatGPT."
+    oifname "ve-nscodex2" ip daddr @github_ipv4 tcp dport { 22, 80, 443 } accept       comment "Allow connections to GitHub."
+    oifname "ve-nscodex2" ip daddr @other_https_ipv4 tcp dport 443 accept              comment "Allow connections to select https services."
+
+    # Fast-fail everything not explicitly allowed:
+    meta l4proto tcp reject with tcp reset
+    reject with icmpx type admin-prohibited
+  }
+}
+
+table ip nat {
+  chain OUTPUT {
+    # Hook before routing (dstnat) so 127.0.0.1:53 queries are redirected to the host endpoint.
+    type nat hook output priority dstnat; policy accept;
+
+    ip daddr 127.0.0.1 udp dport 53 dnat to 10.0.2.1:53     comment "Redirect UDP DNS destined for 127.0.0.1 to the host veth (10.0.2.1:53)."
+    ip daddr 127.0.0.1 tcp dport 53 dnat to 10.0.2.1:53     comment "Redirect TCP DNS destined for 127.0.0.1 to the host veth (10.0.2.1:53)."
+  }
+
+  chain POSTROUTING {
+    # Hook after routing (srcnat) so replies come back into the netns instead of getting looped on the host.
+    type nat hook postrouting priority srcnat; policy accept;
+
+    oifname "ve-nscodex2" ip saddr 127.0.0.1 udp dport 53 snat to 10.0.2.2  comment "SNAT UDP DNS source 127.0.0.1 → 10.0.2.2 to ensure return traffic reaches the netns."
+    oifname "ve-nscodex2" ip saddr 127.0.0.1 tcp dport 53 snat to 10.0.2.2  comment "SNAT TCP DNS source 127.0.0.1 → 10.0.2.2 for consistent return path."
+  }
+}

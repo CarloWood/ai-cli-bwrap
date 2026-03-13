@@ -236,7 +236,7 @@ add_ro () {  # Usage: add_ro SRC DST
 del_path $HOME/bin      # Do not run the codex script (again).
 CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$CODEX_WORKSPACE'%/opt/ext4/nvme2/codex/workspace%')"
 echo "CODEX_COMMAND = $CODEX_COMMAND"
-CODEX_THREAD_ID=
+SESSION_ID=
 # This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting codex.
 COMMAND="$HOME_CODEX/.local/bin/start_codex"
 # Determine CODEX_MODE.
@@ -253,15 +253,15 @@ elif [ "$#" -ge 1 ] && [ "$1" == "bash" ]; then
 elif [ "$#" -eq 1 ] && [[ $1 == "plan" || $1 == "planner" ]]; then
   CODEX_MODE="planner"
   if [ -l "$PROJECTDIR/AAP/planner/id" ]; then
-    CODEX_THREAD_ID=$(readlink $PROJECTDIR/AAP/planner/id)
+    SESSION_ID=$(readlink $PROJECTDIR/AAP/planner/id)
   fi
 elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
   # Append `resume ...` to the default arguments.
-  CODEX_THREAD_ID="${2}"
-  local thread_id_dir="$PROJECTDIR/AAP/ThreadID/$CODEX_THREAD_ID"
+  SESSION_ID="${2}"
+  local thread_id_dir="$PROJECTDIR/AAP/ThreadID/$SESSION_ID"
   if [[ -d "$thread_id_dir" ]]; then
     # Figure out the mode.
-    CODEX_MODE=$(<"$PROJECTDIR/AAP/ThreadID/$CODEX_THREAD_ID/mode")
+    CODEX_MODE=$(<"$PROJECTDIR/AAP/ThreadID/$SESSION_ID/mode")
   else
     echo -e "\e[31mWARNING: $thread_id_dir DOES NOT EXIST!\e[0m"
     sleep 2
@@ -269,7 +269,7 @@ elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
 else
   CODEX_MODE=coder
   if [[ -L "$PROJECTDIR/AAP/coder/id" ]]; then
-    CODEX_THREAD_ID=$(basename $(readlink $PROJECTDIR/AAP/coder/id))
+    SESSION_ID=$(basename $(readlink $PROJECTDIR/AAP/coder/id))
   fi
 fi
 
@@ -289,23 +289,38 @@ for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${CODEX_EXTRA_WRITABL
 done
 roots_json+="]"
 
-# Construct command_args.
-command_args=(
-  "$CODEX_COMMAND"
-#  "--sandbox" "workspace-write"                                 # `workspace` here refers to the repository - not workspace/.
-  "--sandbox" "danger-full-access"
-  # These options are only OK inside this container:
-  "--ask-for-approval" "never"
-  "--config" "sandbox_workspace_write.network_access=true"
-  "--config" "sandbox_workspace_write.writable_roots=${roots_json}"
-)
+if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+  echo "Running opencode..."
+  # Construct command_args.
+  command_args=(
+    "/usr/bin/bun"
+    "run"
+    "dev"
+    "--"
+  )
+else
+  # Construct command_args.
+  command_args=(
+    "$CODEX_COMMAND"
+  #  "--sandbox" "workspace-write"                                 # `workspace` here refers to the repository - not workspace/.
+    "--sandbox" "danger-full-access"
+    # These options are only OK inside this container:
+    "--ask-for-approval" "never"
+    "--config" "sandbox_workspace_write.network_access=true"
+    "--config" "sandbox_workspace_write.writable_roots=${roots_json}"
+  )
+fi
 if [[ $CODEX_MODE == "shell" ]]; then
   command_args=("-l")
 elif [[ $CODEX_MODE == "bash" ]]; then
   shift
   command_args=("$@")
-elif [ -n "$CODEX_THREAD_ID" ]; then
-  command_args+=(resume "$CODEX_THREAD_ID")
+elif [[ -n "$SESSION_ID" ]]; then
+  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+    command_args+=(-s "$SESSION_ID")
+  else
+    command_args+=(resume "$SESSION_ID")
+  fi
 fi
 
 # Build the bwrap argv tail (the --ro-bind pieces).
@@ -330,13 +345,22 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_CODEX/.bwrap-masks/usr_src
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-echo -e "Running codex in \e[31m\"$CODEX_MODE\" mode\e[0m."
+if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+  AGENT="opencode"
+else
+  AGENT="codex"
+fi
+echo -e "Running $AGENT in \e[31m\"$CODEX_MODE\" mode\e[0m."
 
 if [[ $CODEX_MODE == "planner" || $CODEX_MODE == "coder" ]]; then
   # Start the sockettapd.
   start_sockettapd "$CODEX_MODE"
-  # Make codex listen on the correct socket.
-  command_args+=(--config exec_socket_path="/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
+  # Make the agent listen on the correct socket.
+  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+    command_args+=(--exec-socket-path "/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
+  else
+    command_args+=(--config exec_socket_path="/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
+  fi
 fi
 
 # Switch home directories.
@@ -400,7 +424,9 @@ bwrap_args=(
   --remount-ro /usr/src
   # Mount the home directory; Codex should never write here, therefore it is remounted ro below.
   $(create_dirs "$HOME_CODEX") --bind "$HOME_CODEX" "$HOME_CODEX"
-  # ssh doesn't use HOME, so we have to add HOME_USER to the container. Use --bind so we can add to /home/carlo/.ssh/known_hosts from the shell. Other files are owned by root.
+  # ssh doesn't use HOME, so we have to add HOME_USER to the container. We need mode 755 because it will be owned by root inside the container.
+  --perms 755 --dir "$HOME_USER"
+  # Use --bind so we can add to /home/carlo/.ssh/known_hosts from the shell. Other files are owned by root.
   $(create_dirs "$HOME_USER/.ssh") --bind "$HOME_CODEX/.ssh" "$HOME_USER/.ssh"
   # Add individual directories from our home directory.
   $(create_dirs "$HOME_CODEX/.config/nvim" "$HOME_CODEX") --ro-bind "$HOME_USER/.config/nvim" "$HOME_CODEX/.config/nvim"

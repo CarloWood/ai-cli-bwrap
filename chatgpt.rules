@@ -1,4 +1,0 @@
-add table inet nscodex_firewall
-add set inet nscodex_firewall chatgpt_ipv4 { type ipv4_addr; }
-flush set inet nscodex_firewall chatgpt_ipv4
-add element inet nscodex_firewall chatgpt_ipv4 { 104.18.32.47,104.18.33.45,104.18.41.158,104.18.41.241,172.64.146.15,172.64.146.98,172.64.154.211,172.64.155.209,18.239.50.123,18.239.50.18,18.239.50.29,18.239.50.92,18.65.39.110,18.65.39.112,18.65.39.51,18.65.39.77,34.128.128.0 }

@@ -1,0 +1,57 @@
+# File: /etc/conf.d/netns/nft-nscodex-outside.rules
+#
+# Goal: On the host, receive DNS from the nscodex netns (10.0.2.2 → 10.0.2.1:53),
+#       DNAT it to the local resolver on 127.0.0.1:53, and allow it through INPUT.
+#       Optionally, MASQUERADE 10.0.2.0/24 out via enp8s0 for non-DNS egress from the netns.
+#
+# Topology:
+#   - Host side veth:   ve-nscodex1 (10.0.2.1/24).
+#   - Netns side veth:  ve-nscodex2 (10.0.2.2/24).
+# Traffic flow (host perspective):
+#   1) PREROUTING-DNAT: Packets arriving on ve-nscodex1 with dst 10.0.2.1:53 are
+#      rewritten to 127.0.0.1:53 so they hit the host’s local DNS resolver.
+#   2) INPUT-allow: Permit those (now local) DNS packets so they are not dropped by host firewall.
+#   3) POSTROUTING-MASQ (optional): SNAT any 10.0.2.0/24 egress on enp8s0 so the netns can access the Internet.
+#
+# Notes:
+#   - This file is loaded on the host (not inside the netns).
+#   - Tables are namespaced (io.systemd.netns.nscodex.*) to avoid conflicts with UFW/systemd’s own tables.
+#   - If UFW is active, also add matching UFW rules that allow src 10.0.2.2 (or 10.0.2.0/24) → dst 127.0.0.1:53,
+#     or UFW may still drop the INPUT after DNAT.
+#   - The POSTROUTING MASQUERADE is not required for DNS hairpin to 127.0.0.1. Keep it only if you want general outbound NAT.
+
+table ip io.systemd.netns.nscodex.nat {
+  chain prerouting {
+    # NAT PREROUTING runs before routing for packets arriving on the host.
+    type nat hook prerouting priority dstnat; policy accept;
+
+    # DNAT UDP DNS from the netns veth to the host loopback resolver.
+    iifname "ve-nscodex1" ip daddr 10.0.2.1 udp dport 53 dnat to 127.0.0.1:53  comment "DNAT UDP DNS from nscodex to 127.0.0.1:53."
+
+    # DNAT TCP DNS (fallback/large answers) likewise.
+    iifname "ve-nscodex1" ip daddr 10.0.2.1 tcp dport 53 dnat to 127.0.0.1:53  comment "DNAT TCP DNS from nscodex to 127.0.0.1:53."
+  }
+
+  chain postrouting {
+    # NAT POSTROUTING runs after routing and is used for SNAT/MASQ.
+    type nat hook postrouting priority srcnat; policy accept;
+
+    # Optional: MASQUERADE all traffic sourced from the nscodex /24 when it exits via enp8s0.
+    # Keep this only if you want general outbound connectivity for the netns through the host uplink.
+    oifname "enp8s0" ip saddr 10.0.2.0/24 masquerade  comment "MASQ 10.0.2.0/24 toward enp8s0 (optional, not required for DNS to 127.0.0.1)."
+  }
+}
+
+table inet io.systemd.netns.nscodex.host_filter {
+  chain input {
+    # Filter INPUT on the host. Default accept here, but explicit allows make intent clear.
+    type filter hook input priority filter; policy accept;
+
+    # Always allow loopback.
+    iif "lo" accept  comment "Allow loopback."
+
+    # Allow DNS that arrives from the netns veth (after DNAT, dst is 127.0.0.1:53).
+    iifname "ve-nscodex1" udp dport 53 accept  comment "Permit UDP DNS from nscodex veth."
+    iifname "ve-nscodex1" tcp dport 53 accept  comment "Permit TCP DNS from nscodex veth."
+  }
+}
