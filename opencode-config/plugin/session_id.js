@@ -9,7 +9,7 @@ import { setTimeout as sleep } from "node:timers/promises";
  *
  * Goal:
  * - Wait until opencode has created a real `ses_*` session ID for the current chat.
- * - Read the sockettap configuration from the user's opencode TUI config.
+ * - Read the sockettap configuration from a dedicated config file.
  * - Construct the UNIX socket path as `<exec_socket_path>/$CODEX_MODE.sock`.
  * - Connect to that socket and send the same payload shape used by the
  *   `SocketTap.session()` implementation on this branch.
@@ -19,6 +19,10 @@ import { setTimeout as sleep } from "node:timers/promises";
  * The session ID is not known when opencode first starts. It only becomes
  * available once opencode has created the first chat message for a session.
  * This plugin hooks into that moment and performs the external notification.
+ *
+ * Configuration:
+ * - `$XDG_CONFIG_HOME/opencode/sockettap.json`
+ * - expected shape: `{ "exec_socket_path": "/path/to/socket/dir" }`
  */
 const waits = [0, 50, 150, 500];
 
@@ -69,15 +73,14 @@ function payload(sessionID, cwd) {
  * Local helper.
  *
  * Intended effect:
- * Resolve which TUI configuration file to read.
+ * Resolve which sockettap configuration file to read.
  *
- * If opencode was started with `OPENCODE_TUI_CONFIG`, that file wins. Otherwise
- * the plugin uses the normal global config location under `$XDG_CONFIG_HOME`.
+ * The plugin uses a dedicated file under the global opencode config directory so
+ * that custom plugin settings do not interfere with opencode's own validated
+ * `tui.json` format.
  */
 function configFile() {
-  return (
-    process.env.OPENCODE_TUI_CONFIG ?? path.join(home, "opencode", "tui.json")
-  );
+  return path.join(home, "opencode", "sockettap.json");
 }
 
 /**
@@ -86,7 +89,7 @@ function configFile() {
  * Intended effect:
  * Construct the full path to the sockettapd UNIX socket.
  *
- * The base directory is read from `exec_socket_path` in `tui.json`. The final
+ * The base directory is read from `exec_socket_path` in `sockettap.json`. The final
  * filename is derived from `$CODEX_MODE`, giving:
  *
  *   <exec_socket_path>/$CODEX_MODE.sock
@@ -108,9 +111,7 @@ async function socketPath() {
   const dir =
     typeof data.exec_socket_path === "string"
       ? data.exec_socket_path
-      : typeof data.tui?.exec_socket_path === "string"
-        ? data.tui.exec_socket_path
-        : undefined;
+      : undefined;
   if (!dir) return;
   return path.join(dir, `${mode}.sock`);
 }

@@ -359,11 +359,11 @@ if [[ $CODEX_MODE == "planner" || $CODEX_MODE == "coder" ]]; then
   # Start the sockettapd.
   start_sockettapd "$CODEX_MODE"
   # Make the agent listen on the correct socket.
-  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
-    command_args+=(--exec-socket-path "/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
-  else
+  if [[ -z "$CODEX_RUN_OPENCODE" ]]; then
     command_args+=(--config exec_socket_path="/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
   fi
+  # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `session_id.js` instead.
+  #command_args+=(--exec-socket-path "/opt/ext4/nvme2/codex/workspace/AAP/$CODEX_MODE.sock")
 fi
 
 # Switch home directories.

@@ -2,6 +2,5 @@
   "disable_mouse": false,
   "keybinds": {
     "mouse_toggle": "f6"
-  },
-  "exec_socket_path": "/opt/ext4/nvme2/codex/workspace/AAP"
+  }
 }
