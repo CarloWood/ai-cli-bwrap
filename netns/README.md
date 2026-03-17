@@ -7,3 +7,5 @@ To stop all services and take down nscodex cleanly, run:
 `sudo systemctl stop netns-lo@nscodex netns-veth@nscodex`.
 
 See https://github.com/CarloWood/systemd-netns which is required too.
+
+[sbin/nft_add_allowed_IPs.sh](sbin/nft_add_allowed_IPs.sh) is a backup of /usr/local/sbin/nft_add_allowed_IPs.sh
