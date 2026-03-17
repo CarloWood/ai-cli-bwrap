@@ -2,42 +2,43 @@
 
 This is a personal project, not necessarily intended to be used by others.
 
-Starts the OpenAI Codex CLI inside a bubblewrap container with full permissions,
+Starts the Opencode CLI or OpenAI Codex CLI inside a bubblewrap container with full permissions,
 but limited severely by normal Linux access controls (network namespace `nscodex`
-limiting all internet access to just github.com, using `bwrap` to only give
+limiting all internet access to white-listed domains, using `bwrap` to only give
 read-access to what is required (e.g. not the users HOME directory, or `/etc`),
 and only give write access to required directories (workspace, gitache).
 
-Replace `codex` with the bash function defined in `codex.env`, and have that
-load the main script `codex.run`.
+Replace `codex` and `opencode` with the bash functions defined in [`env.codex`](env.codex),
+and have that load the main script [`codex.run`](codex.run).
 
 Usage:
 
 ```
-codex [planner|coder|bash <command>|shell|resume <uuid>]
+codex|opencode [planner|coder|bash <command>|shell|resume <session-id>]
 ```
 
-Without a command line parameter, a new Session Chat (Thread ID / UUID) is created
-and the Codex CLI works as normal.
+Without a command line parameter the CLI is started as `coder` and opens the
+last used Session ID for that mode.
 
 * bash <command> : run <command> in a bash shell inside the codex container.
-* shell : start an interactive shell inside the codex container.
-* resume <uuid> : resume a previous Thread ID.
-* coder/planner : enter coder/planner mode.
+* shell : start an interactive shell inside the opencode/codex container.
+* resume <session-id> : resume a previous Session ID.
+* coder/planner : enter, or continue last coder/planner mode.
 
 The coder/planner modes also start [sockettapd](https://github.com/CarloWood/codex-sockettapd)
 listening on `$PROJECTDIR/AAP/$CODEX_MODE.sock`, where `CODEX_MODE` is respectively `planner` or `coder`.
 For that to work you need the `cw_exec_socket_tap` branch that is part of the `master` branch
-of my [codex fork](https://github.com/CarloWood/openai-codex).
+of my [codex fork](https://github.com/CarloWood/openai-codex), or the [`session_id.js`](opencode-config/plugin/session_id.js)
+plugin for opencode.
 
 The project also requires [remountd](https://github.com/CarloWood/remountd), a systemd service,
 to be installed and enabled. This allows for switching between a read-only and read-write
 mounted workspace directory (not relying on good behavior by the A.I.).
 
-The `codex-run` script uses a lot of environment variables that are part
-of my normal build system (all values are relative to the host system)
+The [`codex.run`](codex.run) script uses a lot of environment variables that are part
+of my normal build system (all values are relative to the host system).
 
-In order to control the environment, you must be using [cdeh](https://carlowood.github.io/howto/cdeh.html).
+In order to control the environment, you are recommended to use [cdeh](https://carlowood.github.io/howto/cdeh.html).
 
 For example, while working on the openai-codex project itself,
 the following environment variables (not an exhaustive list) are set:
@@ -51,7 +52,7 @@ BUILDDIR=/home/carlo/projects/github/codex/openai-codex.git/codex-rs/target/debu
 CODEX_DIRECTORY=codex-rs
 CODEX_EXTRA_WRITABLE_ROOTS=([0]="/opt/ext4/nvme2/codex/.cargo" [1]="/opt/ext4/nvme2/codex/.rustup")
 
-# Already set before.
+# Already set prior.
 CCACHE_DIR=/opt/ccache
 GITACHE_ROOT=/opt/gitache
 
@@ -61,12 +62,14 @@ CODEX_REPOBASE=openai-codex.git
 CODEX_WORKSPACE=/home/carlo/projects/github/codex
 HOME_CODEX=/opt/ext4/nvme2/codex
 REPOROOT=/home/carlo/projects/github/codex/openai-codex.git
+PLANROOT=/home/carlo/projects/github/codex/AAP
 ```
 
 # cdeh environment
 
-I can't list every environment file I use, but here are some of them that should
-help if you want to make a chance to understand what is going on:
+I can't list every environment file I typically use, but here are the two files
+that I directly sourced when working on the codex project, in order to
+help you if you want to make a chance to understand what is going on:
 
 
 For the `~/projects/github/codex` project, the environment files are: (pe = print environment):
@@ -77,7 +80,7 @@ daniel:~/projects/github/codex>pe
 ```
 
 First `/home/carlo/projects/env.source` is loaded, note how that loads `env.codex` that is part of this project.
-Then `/home/carlo/projects/github/codex/env.source` is loaded that is also part of this project.
+Then [`/home/carlo/projects/github/codex/env.source`](env.source) is loaded that is also part of this project.
 
 At the moment of writing the contents of my general "all projects" environment (`/home/carlo/projects/env.source`) is:
 ```
