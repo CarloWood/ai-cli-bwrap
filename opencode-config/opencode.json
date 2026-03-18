@@ -1,0 +1,61 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "coder",
+  "agent": {
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    },
+    "docs": {
+      "disable": true
+    },
+    "coder": {
+      "description": "Default coding agent for implementation work in REPOROOT. Treat PLANROOT as read-only plan context.",
+      "mode": "primary",
+      "prompt": "{file:./prompts/coder.txt}",
+      "color": "info",
+      "permission": {
+        "read": {
+          "{env:GITACHE_ROOT}/**": "deny"
+        },
+        "edit": {
+          "{env:PLANROOT}/**": "deny",
+          "{env:GITACHE_ROOT}/**": "allow"
+        },
+        "external_directory": {
+          "{env:PLANROOT}/**": "allow",
+          "{env:GITACHE_ROOT}/**": "allow"
+        }
+      }
+    },
+    "planner": {
+      "description": "Planning agent that reads REPOROOT, writes plans under PLANROOT, and avoids modifying REPOROOT.",
+      "mode": "primary",
+      "prompt": "{file:./prompts/planner.txt}",
+      "color": "warning",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "{env:PLANROOT}/**": "allow"
+        },
+        "bash": {
+          "*": "ask",
+          "aap-*": "allow",
+          "pwd*": "allow",
+          "ls*": "allow",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "grep*": "allow",
+          "rg*": "allow",
+          "plan_*": "allow"
+        },
+        "external_directory": {
+          "{env:PLANROOT}/**": "allow"
+        }
+      }
+    }
+  }
+}
