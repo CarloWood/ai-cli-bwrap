@@ -1,6 +1,140 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "coder",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "aap-*": "deny",
+
+      "archrelease": "allow",
+      "base32": "allow",
+      "base64": "allow",
+      "basename *": "allow",
+      "blkid": "allow",
+      "bscalc": "allow",
+      "bsdcat": "allow",
+      "bsdcpio": "allow",
+      "bsdtar": "allow",
+      "bsdunzip": "allow",
+      "bun": "allow",
+      "busctl": "allow",
+      "bzcat": "allow",
+      "bzdiff": "allow",
+      "bzgrep": "allow",
+      "bzip2": "allow",
+      "bzmore": "allow",
+      "bzz": "allow",
+      "cairo-trace": "allow",
+      "catman *": "allow",
+      "c++filt": "allow",
+      "cmp": "allow",
+      "count": "allow",
+      "cp": "allow",
+      "cpio": "allow",
+      "ctags": "allow",
+      "cut": "allow",
+      "date": "allow",
+      "dd": "allow",
+      "df": "allow",
+      "diff": "allow",
+      "diff3": "allow",
+      "dig": "allow",
+      "dir": "allow",
+      "dirname": "allow",
+      "dltest": "allow",
+      "dot": "allow",
+      "doxygen": "allow",
+      "dpipe": "allow",
+      "drill": "allow",
+      "du": "allow",
+      "dwarfdump": "allow",
+      "env": "allow",
+      "errno": "allow",
+      "expr": "allow",
+      "factor": "allow",
+      "false": "allow",
+      "file": "allow",
+      "filecap": "allow",
+      "flex": "allow",
+      "flex++": "allow",
+      "fmt": "allow",
+      "free": "allow",
+      "funzip": "allow",
+      "fy-*": "allow",
+      "gawk": "allow",
+      "getcap": "allow",
+      "getfacl": "allow",
+      "getfattr": "allow",
+      "getopt": "allow",
+      "glow": "allow",
+      "glxinfo": "allow",
+      "gm": "allow",
+      "gml2gv": "allow",
+      "gv2gml": "allow",
+      "groups": "allow",
+      "gum": "allow",
+      "gunzip": "allow",
+      "gzip": "allow",
+      "hunspell": "allow",
+      "hzip": "allow",
+      "id": "allow",
+      "ident": "allow",
+      "iconv": "allow",
+      "info": "allow",
+      "infocmp": "allow",
+      "infotocap": "allow",
+      "inotifywait": "allow",
+      "inotifywatch": "allow",
+      "install": "allow",
+      "ip": "allow",
+      "join": "allow",
+
+      "hexdump *": "allow",
+      "journalctl *": "allow",
+      "jq *": "allow",
+      "json*": "allow",
+      "awk *": "allow",
+      "cat *": "allow",
+      "cd *": "allow",
+      "echo *": "allow",
+      "false": "allow",
+      "find *": "allow",
+      "findname *": "allow",
+      "git *": "allow",
+      "grep *": "allow",
+      "gs *": "allow",
+      "head": "allow",
+      "ln *": "allow",
+      "ls *": "allow",
+      "nl *": "allow",
+      "perl *": "allow",
+      "pgrep *": "allow",
+      "printf *": "allow",
+      "ps *": "allow",
+      "pwd": "allow",
+      "python3 *": "allow",
+      "rg *": "allow",
+      "rm *": "allow",
+      "sed *": "allow",
+      "set *": "allow",
+      "sleep *": "allow",
+      "strace *": "allow",
+      "tail *": "allow",
+      "true": "allow",
+      "wc *": "allow",
+      "which *": "allow",
+      "zcat *": "allow"
+    },
+    "read": {
+      "*": "allow"
+    },
+    "edit": {
+      "*": "deny"
+    },
+    "external_directory": {
+      "{env:GITACHE_ROOT}/**": "deny"
+    }
+  },
   "agent": {
     "build": {
       "disable": true
@@ -11,49 +145,58 @@
     "docs": {
       "disable": true
     },
+    "analyst": {
+      "description": "Pre-planning agent that can read REPOROOT, do web searches.",
+      "mode": "primary",
+      "prompt": "{file:./prompts/analyst.txt}",
+      "color": "#4040ff",
+      "permission": {
+        "bash": {
+          "aap-analyst-list": "allow"
+        }
+      }
+    },
+    "planner": {
+      "description": "Planning agent that reads REPOROOT, writes plans under PLANROOT. Treat REPOROOT as read-only.",
+      "mode": "primary",
+      "prompt": "{file:./prompts/planner.txt}",
+      "color": "warning",
+      "permission": {
+        "bash": {
+          "aap-*": "allow"
+        },
+        "edit": {
+          "{env:PLANROOT}/**": "allow"
+        }
+      }
+    },
     "coder": {
       "description": "Default coding agent for implementation work in REPOROOT. Treat PLANROOT as read-only plan context.",
       "mode": "primary",
       "prompt": "{file:./prompts/coder.txt}",
       "color": "info",
       "permission": {
-        "read": {
-          "{env:GITACHE_ROOT}/**": "deny"
-        },
-        "edit": {
-          "{env:PLANROOT}/**": "deny",
-          "{env:GITACHE_ROOT}/**": "allow"
-        },
-        "external_directory": {
-          "{env:PLANROOT}/**": "allow",
-          "{env:GITACHE_ROOT}/**": "allow"
-        }
-      }
-    },
-    "planner": {
-      "description": "Planning agent that reads REPOROOT, writes plans under PLANROOT, and avoids modifying REPOROOT.",
-      "mode": "primary",
-      "prompt": "{file:./prompts/planner.txt}",
-      "color": "warning",
-      "permission": {
-        "edit": {
-          "*": "deny",
-          "{env:PLANROOT}/**": "allow"
-        },
         "bash": {
-          "*": "ask",
-          "aap-*": "allow",
-          "pwd*": "allow",
-          "ls*": "allow",
-          "git status*": "allow",
-          "git diff*": "allow",
-          "git log*": "allow",
-          "grep*": "allow",
-          "rg*": "allow",
-          "plan_*": "allow"
+          "aap-ls *": "allow",
+          "as *": "allow",
+          "autogen.sh": "allow",
+          "c++ *": "allow",
+          "cc *": "allow",
+          "ccache *": "allow",
+          "clang *": "allow",
+          "clang++ *": "allow",
+          "cargo *": "allow",
+          "cmake *": "allow",
+          "configure": "allow",
+          "gcc *": "allow",
+          "g++ *": "allow",
+          "git *": "allow",
+          "just *": "allow",
+          "make *": "allow",
+          "ninja *": "allow"
         },
-        "external_directory": {
-          "{env:PLANROOT}/**": "allow"
+        "edit": {
+          "{env:REPOROOT}/**": "allow"
         }
       }
     }
