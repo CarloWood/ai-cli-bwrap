@@ -38,8 +38,9 @@ if [[ ! -d "/run/remountd" ]]; then
   exit 1
 fi
 
-OPENCODE_CONFIG="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/opencode-config"
-echo "OPENCODE_CONFIG=\"$OPENCODE_CONFIG\""
+# This is the directory that is bind mounted in the container as ~/workspace/.xdg.
+CODEX_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
+echo "CODEX_XDG_ROOT=\"$CODEX_XDG_ROOT\""
 
 function __cdeh_restore_host_environment() {
   # Store the base environment to $CODEX_WORKSPACE/env.base.
@@ -455,8 +456,10 @@ bwrap_args=(
 
 if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   bwrap_args+=(
-    # This must be read-write because this directory is where AGENTS.md is being generated.
-    --bind "$OPENCODE_CONFIG" "$HOME_CODEX/workspace/.xdg/config/opencode"
+    # This must be read-write because this directory is written to by multiple applications;
+    # it contains contains XDG_CACHE_HOME, Opencode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
+    # where the global AGENTS.md is being generated.
+    --bind "$CODEX_XDG_ROOT" "$HOME_CODEX/workspace/.xdg"
   )
 fi
 
