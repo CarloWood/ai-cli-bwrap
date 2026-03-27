@@ -254,10 +254,10 @@ elif [ "$#" -ge 1 ] && [ "$1" == "bash" ]; then
   COMMAND="bash"
   CODEX_MODE="bash"
   shift
-elif [ "$#" -eq 1 ] && [[ $1 == "plan" || $1 == "planner" ]]; then
-  CODEX_MODE="planner"
-  if [ -l "$PROJECTDIR/AAP/planner/id" ]; then
-    SESSION_ID=$(readlink $PROJECTDIR/AAP/planner/id)
+elif [ "$#" -eq 1 ] && [[ $1 == "analyst" || $1 == "planner" ]]; then
+  CODEX_MODE="$1"
+  if [ -l "$PROJECTDIR/AAP/$CODEX_MODE/id" ]; then
+    SESSION_ID=$(readlink $PROJECTDIR/AAP/$CODEX_MODE/id)
   fi
 elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
   # Append `resume ...` to the default arguments.
@@ -280,19 +280,6 @@ fi
 # Setup Agent Assisted Planner (AAP) project.
 setup_aap
 
-# Construct roots_json.
-if [[ $CODEX_MODE == "planner" ]]; then
-  roots_json='["/opt/ext4/nvme2/codex/workspace/AAP"'
-else
-  roots_json='["/opt/ext4/nvme2/codex/workspace"'
-fi
-# Note: this won't work if GITACHE_ROOT, CCACHE_DIR or HOME contain spaces or quotes.
-# Also note that $HOME/.ssh will be mapped onto $HOME_CODEX/.ssh -- it isn't the real HOME.
-for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${CODEX_EXTRA_WRITABLE_ROOTS[@]}"; do
-  roots_json+=",\"$p\""
-done
-roots_json+="]"
-
 if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   echo "Running opencode..."
   # Construct command_args.
@@ -309,6 +296,19 @@ if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
     )
   fi
 else
+  # Construct roots_json.
+  if [[ $CODEX_MODE == "planner" ]]; then
+    roots_json='["/opt/ext4/nvme2/codex/workspace/AAP"'
+  elif [[ $CODEX_MODE == "coder" ]]; then
+    roots_json='["/opt/ext4/nvme2/codex/workspace"'
+  fi
+  # Note: this won't work if GITACHE_ROOT, CCACHE_DIR or HOME contain spaces or quotes.
+  # Also note that $HOME/.ssh will be mapped onto $HOME_CODEX/.ssh -- it isn't the real HOME.
+  for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${CODEX_EXTRA_WRITABLE_ROOTS[@]}"; do
+    roots_json+=",\"$p\""
+  done
+  roots_json+="]"
+
   # Construct command_args.
   command_args=(
     "$CODEX_COMMAND"
@@ -362,7 +362,7 @@ else
 fi
 echo -e "Running $AGENT in \e[31m\"$CODEX_MODE\" mode\e[0m."
 
-if [[ $CODEX_MODE == "planner" || $CODEX_MODE == "coder" ]]; then
+if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" || $CODEX_MODE == "coder" ]]; then
   # Start the sockettapd.
   start_sockettapd "$CODEX_MODE"
   # Make the agent listen on the correct socket.
@@ -462,13 +462,17 @@ if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   )
 fi
 
-if [[ $CODEX_MODE == "planner" ]]; then
+if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
+  if [[ $CODEX_MODE == "planner" ]]; then
+    bwrap_args+=(
+      # OpenAI Codex CAN write to the following directories (see writable_roots):
+      --bind "$CODEX_WORKSPACE/AAP" "$HOME_CODEX/workspace/AAP"
+    )
+  fi
   bwrap_args+=(
-    # OpenAI Codex CAN write to the following directories (see writable_roots):
-    --bind "$CODEX_WORKSPACE/AAP" "$HOME_CODEX/workspace/AAP"
     # Remount $CODEX_WORKSPACE read-only, now that all bind mounts have been added to it.
     --remount-ro "$HOME_CODEX/workspace"
-    # Change directory to the repository (Codex automatically has write access here because of --sandbox workspace-write).
+    # Change directory to the repository (Codex has write access here because of --sandbox workspace-write).
     --chdir "$HOME_CODEX/workspace/AAP"
   )
 else
