@@ -306,7 +306,6 @@ if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   else
     command_args=(
       "opencode"
-      "--"
     )
   fi
 else
@@ -457,7 +456,7 @@ bwrap_args=(
 if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
-    # it contains contains XDG_CACHE_HOME, Opencode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
+    # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
     # where the global AGENTS.md is being generated.
     --bind "$CODEX_XDG_ROOT" "$HOME_CODEX/workspace/.xdg"
   )
