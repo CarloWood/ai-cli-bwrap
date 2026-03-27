@@ -256,7 +256,7 @@ elif [ "$#" -ge 1 ] && [ "$1" == "bash" ]; then
   shift
 elif [ "$#" -eq 1 ] && [[ $1 == "analyst" || $1 == "planner" ]]; then
   CODEX_MODE="$1"
-  if [ -l "$PROJECTDIR/AAP/$CODEX_MODE/id" ]; then
+  if [[ -L "$PROJECTDIR/AAP/$CODEX_MODE/id" ]]; then
     SESSION_ID=$(readlink $PROJECTDIR/AAP/$CODEX_MODE/id)
   fi
 elif [ "$#" -eq 2 ] && [ "$1" == "resume" ]; then
@@ -484,7 +484,7 @@ else
   )
 fi
 
-export CODEX_MODE
+export CODEX_MODE CODEX_RUN_OPENCODE
 
 echo "Starting bwrap, command:"
 echo "sudo --preserve-env=HOME,CODEX_REPOBASE,CODEX_MODE \\"
