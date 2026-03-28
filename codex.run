@@ -432,6 +432,7 @@ bwrap_args=(
   $(create_dirs "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER")
   --ro-bind "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER/projects/github/neovim-true-color-scheme-editor"
   --ro-bind "$HOST_XAUTHORITY" "$CODEX_XAUTHORITY"
+  # Only really needed for the Codex CLI, but well.
   --bind "$HOME_USER/.codex" "$HOME_CODEX/.codex"
   # OpenAI Codex CAN write to the following directories (see writable_roots):
   --bind "$PROJECTDIR" "$HOME_CODEX/workspace"
