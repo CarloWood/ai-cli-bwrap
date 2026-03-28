@@ -53,7 +53,7 @@ and a bubblewrapped environment inside of which we then run `bash`, the Codex CL
 or the OpenCode CLI (either from the [opencode repository](https://github.com/CarloWood/opencode) if that is the current project,
 or otherwise as `~/.local/bin/opencode` where it is installed).
 
-Then each time `bash` is run to execute a command that sources `$HOME_CODEX/.bash_profile`.
+Then each time `bash` is run, to execute a command, that sources [`$HOME_CODEX/.bash_profile`](#bash_profile).
 
 ### `~/.bash_profile`
 
