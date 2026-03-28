@@ -93,7 +93,7 @@ The following environment variables are changed and exported (if not already) by
 <a a id="bashprofile"></a>
 The following environment variables are set by `~/.bash_profile` inside the container:
 
-* <a id="PROJECTDIR_container>`PROJECTDIR`</a> : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/codex/workspace`, the directory that is the bind-mount location for the host directory `$PROJECTDIR`.
+* <a id="PROJECTDIR_container">`PROJECTDIR`</a> : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/codex/workspace`, the directory that is the bind-mount location for the host directory `$PROJECTDIR`.
 * <a id="HOME_CODEX_container">`HOME_CODEX`</a> : set to `$HOME` and therefore equal to `/opt/ext4/nvme2/codex` - the same value that it had on the host.
 * <a id="CDEH_ROOT_container">`CDEH_ROOT`</a> : set to `$HOME/cdeh`, aka `/opt/ext4/nvme2/codex/cdeh`, the containers own [cdeh](https://carlowood.github.io/howto/cdeh.html) root. This directory contains the `env.bashrc` and `do_prompt` files copied by [`codex.run`](codex.run). Also the host file `$CDEH_TMP/env.base` (see above) was copied there by `codex.run`. Finally it contains all `env.source` files that normally are printed by `pe` copied here as `env.host$nr`. All this is just needed to rebuild the environment inside the container (that is being documented here).
 * <a id="CODEX_INSIDE_ENVIRONMENT_container">`CODEX_INSIDE_ENVIRONMENT`</a> : set to `1`.
