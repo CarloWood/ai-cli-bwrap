@@ -43,7 +43,7 @@ Note that the function `project_environment` sources `$PROJECTDIR/env.compiler`.
 [This file](env.codex) sets the environment variables [`HOME_CODEX`](#HOME_CODEX_host) and [`CODEX_HOME`](#CODEX_HOME_host)
 as well as defines the bash functions `codex` and `opencode`.
 
-Note that the function `codex` sources [`$HOME/projects/github/codex/codex.run`](codex.run),
+Note that the function `codex` sources [`$HOME/projects/github/codex/codex.run`](codex.run)
 that starts a bwrap container with optionally the Codex CLI or the OpenCode CLI running inside it.
 
 ### `codex.run`
@@ -80,6 +80,7 @@ The following environment variables are used by the script [codex.run](codex.run
 * <a id="GITACHE_ROOT_host">`GITACHE_ROOT`</a> : will be bind-mounted read-write inside the container, sharing the [gitache](https://github.com/CarloWood/gitache) root with the host.
 * <a id="CODEX_EXTRA_WRITABLE_ROOTS_host">`CODEX_EXTRA_WRITABLE_ROOTS`</a> : a bash array with additional paths - not used by opencode.
 * <a id="CODEX_RUN_OPENCODE_host">`CODEX_RUN_OPENCODE`</a> : defined to `1` (set by the `codex` bash function, see [above](#Starting-opencode)).
+* <a id="CODEX_HOME_host">`CODEX_HOME`</a> : set to `$HOME/.codex` (not used by `codex.run` directly). This directory is bind-mounted at `~/.codex` in the container.
 
 ### Defined in the container (visible by `opencode`)
 
