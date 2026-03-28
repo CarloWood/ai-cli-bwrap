@@ -50,8 +50,8 @@ that starts a bwrap container with optionally the Codex CLI or the OpenCode CLI 
 
 [This file](codex.run) does the heavy lifting of starting required daemons, the network namespace
 and a bubblewrapped environment inside of which we then run `bash`, the Codex CLI (`/usr/bin/codex`)
-or the OpenCode CLI (either from the opencode repository if that is the current project, or otherwise
-as `~/.local/bin/opencode` where it is installed).
+or the OpenCode CLI (either from the [opencode repository](https://github.com/CarloWood/opencode) if that is the current project,
+or otherwise as `~/.local/bin/opencode` where it is installed).
 
 Then each time `bash` is run to execute a command that sources `$HOME_CODEX/.bash_profile`.
 
