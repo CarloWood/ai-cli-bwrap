@@ -1,0 +1,66 @@
+if [ -z "$BASH_EXECUTION_STRING" ]; then
+  AGENT="CODEX"
+  [[ -z "$CODEX_RUN_OPENCODE" ]] || AGENT="OPENCODE"
+  echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$CODEX_MODE\e[0m)."
+fi
+
+export CODEX_WORKSPACE=$HOME/workspace
+export HOME_CODEX=$HOME
+
+# Set up the CDEH environment.
+CDEH_ROOT=$HOME/cdeh
+source $CDEH_ROOT/env.bashrc
+
+# Load the host base environment. The CDEH_ROOT was abused to store that.
+source "$CDEH_ROOT/env.base"
+
+# Change the base environment.
+export CODEX_INSIDE_ENVIRONMENT=1
+export CODEX_WORKSPACE=$HOME/workspace
+# Default top project for compiling libraries.
+export TOPPROJECT=$CODEX_WORKSPACE
+# The current project.
+export REPOROOT=$CODEX_WORKSPACE/$CODEX_REPOBASE
+# Set a codex environment specific PATH.
+export PATH="$HOME/.local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
+# Set a codex environment specific xdg cache directory.
+export XDG_CACHE_HOME="$CODEX_WORKSPACE/cache/xdg"
+# We want to use the same db name when running inside the opencode project, even though
+# in that case that is run using `bun run`.
+export OPENCODE_DISABLE_CHANNEL_DB=1
+
+if [ "$CODEX_MODE" = "shell" ]; then
+  #------------------------------------------------------------------------------
+  # These are set for convenience, while using this environment myself.
+  export PASSWORD_STORE_X_SELECTION=primary
+  export PASSWORD_STORE_CLIP_TIME=15
+  eval `dircolors $HOME/.DIR_COLORS`
+  # Aliases
+  alias vi="vim"
+  alias ls='ls --file-type --group-directories-first --color=auto'
+
+  # Set a fancy color prompt
+  PS1PREFIX="$HOSTNAME-\[\e[31m\]codex\[\e[0m\]:"
+  PS1=$PS1PREFIX'\[\e[35m\]\w\[\e[32`if [[ ${EUID} == 0 ]]; then echo ";7"; fi`m\]>\[\e[30;47;0m\]'
+  #------------------------------------------------------------------------------
+else
+  # Clear things we don't want and set things we do.
+  unset PROMPT_COMMAND
+  export HISTFILE="$CDEH_HISTROOT$CODEX_WORKSPACE/history"
+  PS1="codex-\w>"
+  unalias ssh 2>/dev/null
+fi
+
+# Store this as the base environment.
+__cdeh_store_environment
+
+# Put it all together.
+resource
+
+# export this function
+declare -xf abbreviate_path
+
+# Detect if certain bash functions are available and then pass that to ~/.codex/AGENTS.sh
+#function AGENTS_instructions {
+#  ~/.codex/AGENTS.sh "$(type -t make)" "$(type -t s)" "$(type -t gs)"
+#}
