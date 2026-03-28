@@ -40,7 +40,7 @@ Note that the function `project_environment` sources `$PROJECTDIR/env.compiler`.
 
 ### `env.codex`
 
-[This file](env.codex) sets the environment variables `HOME_CODEX` (see [below](#defined-on-the-host-before-running-codexrun)) and `CODEX_HOME`.
+[This file](env.codex) sets the environment variables `HOME_CODEX` (see [below](#defined-on-the-host-before-running-codexrun)) and `CODEX_HOME`
 as well as defines the bash functions `codex` and `opencode`.
 
 Note that the function `codex` sources [`$HOME/projects/github/codex/codex.run`](codex.run),
@@ -61,7 +61,7 @@ Then each time `bash` is run to execute a command that sources `$HOME_CODEX/.bas
 at `~/.bash_profile` by `codex.run`.
 
 Unlike the hosts `~/.bashrc` this files also sets project specific environment variables.
-It sets `PROJECTDIR`, `HOME_CODEX`, `CODEX_INSIDE_ENVIRONMENT` `TOPPROJECT`, `REPOROOT`, `PATH`, `XDG_CACHE_HOME` and
+It sets `PROJECTDIR`, `HOME_CODEX`, `CODEX_INSIDE_ENVIRONMENT` `TOPPROJECT`, [`REPOROOT`](#REPOROOT), `PATH`, `XDG_CACHE_HOME` and
 `OPENCODE_DISABLE_CHANNEL_DB` and sets up the CDEH environment for inside the container, see [below](#bashprofile).
 
 ## Environment variables
@@ -72,7 +72,7 @@ The following environment variables are used by the script [codex.run](codex.run
 
 * `PROJECTDIR` : the topmost directory associated with the current project. This directory is common to all other paths related to a project, like for example the repository directory and the build directory.
 * `REPOBASE` : the path to the project repository relative to `$PROJECTDIR` (see `REPOROOT`).
-* `REPOROOT` : equal to `$PROJECTDIR/$REPOBASE`; the repository root of the current project.
+* <a id="REPOROOT">`REPOROOT`</a> : equal to `$PROJECTDIR/$REPOBASE`; the repository root of the current project.
 * `CCACHE_DIR` : this path is mounted as tmpfs in the container so that if `CCACHE_DIR` is set to the same value inside the container then it can be used.
 * `HOME_CODEX` : equal to `/opt/ext4/nvme2/codex`, the HOME directory inside the container.
 * `CDEH_TMP` : defined by [cdeh](https://carlowood.github.io/howto/cdeh.html). `$CDEH_TMP/env.base` is expected to contain the environment associated with the `/` (thus free of any project specific definitions) and will be copied to `$HOME_CODEX/cdeh/env.base` so that `cdeh` also works inside the container resulting in the same environment as on the host.
