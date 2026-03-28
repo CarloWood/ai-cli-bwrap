@@ -28,7 +28,7 @@ source $CDEH_ROOT/env.bashrc
 
 While not *really* a part of OpenCode support, my (all) projects specific environment
 plays an important role enough to warrant that I added it to this project, if only for
-documentation purposes. You can find my `~/projects/env.source` here as [projects.env](projects.env).
+documentation purposes. You can find my `~/projects/env.source` here as [env.projects](env.projects).
 
 This file sets the environment variables `CCACHE_DIR` and `GITACHE_ROOT` that are mentioned below
 and, among others, defines the bash functions `project_environment`, `setup_aap`, `abbreviate_path`,
