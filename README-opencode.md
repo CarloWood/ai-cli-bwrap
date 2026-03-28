@@ -16,7 +16,7 @@ The (bash) environment is controlled through [cdeh](https://carlowood.github.io/
 
 ## Environment files involved
 
-### `.bashrc`
+### `~/.bashrc`
 
 This file defines `TOPPROJECT` and initializes `cdeh` by ending with
 ```
