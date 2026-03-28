@@ -34,13 +34,13 @@ This file sets the environment variables `CCACHE_DIR` and `GITACHE_ROOT` that ar
 and, among others, defines the bash functions `project_environment`, `setup_aap`, `abbreviate_path`,
 and `set_compiler_env`.
 
-Furthermore it sources [env.codex](env.codex), see below.
+Furthermore it sources [env.codex](env.codex), see [below](#envcodex).
 
 Note that the function `project_environment` sources `$CODEX_WORKSPACE/env.compiler`.
 
 ### `env.codex`
 
-[This file](env.codex) sets the environment variables `HOME_CODEX` and `CODEX_HOME`, see below,
+[This file](env.codex) sets the environment variables `HOME_CODEX` (see [below](#defined-on-the-host-before-running-codexrun)) and `CODEX_HOME`.
 as well as defines the bash functions `codex` and `opencode`.
 
 Note that the function `codex` sources [`$HOME/projects/github/codex/codex.run`](codex.run),
@@ -62,7 +62,7 @@ at `~/.bash_profile` by `codex.run`.
 
 Unlike the hosts `~/.bashrc` this files also sets project specific environment variables.
 It sets `CODEX_WORKSPACE`, `HOME_CODEX`, `CODEX_INSIDE_ENVIRONMENT` `TOPPROJECT`, `REPOROOT`, `PATH`, `XDG_CACHE_HOME` and
-`OPENCODE_DISABLE_CHANNEL_DB` and sets up the CDEH environment for inside the container, see below.
+`OPENCODE_DISABLE_CHANNEL_DB` and sets up the CDEH environment for inside the container, see [below](#bashprofile).
 
 ## Environment variables
 
@@ -91,6 +91,7 @@ The following environment variables are changed and exported (if not already) by
 * `CODEX_MODE` : one of `"shell"`, `"bash"`, `"analyst"`, `"planner"` or `"coder"`.
 * `CODEX_RUN_OPENCODE` : defined to `1` (set by the `codex` bash function, see above).
 
+<a a id="bashprofile"></a>
 The following environment variables are set by `~/.bash_profile` inside the container:
 
 * `CODEX_WORKSPACE` : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/codex/workspace`, the directory that is the bind-mount location for the host directory `$PROJECTDIR`.
