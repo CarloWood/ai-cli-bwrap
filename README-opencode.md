@@ -10,7 +10,7 @@ sourcing [codex.run](codex.run).
 In other words, running `opencode [<args>]` is equivalent to running either `codex --opencode [<args>]`
 as well as running `CODEX_RUN_OPENCODE=1 codex <args>`.
 
-# Environment variables used
+# Environment variables
 
 The following environment variables are used by the script [codex.run](codex.run):
 
@@ -26,7 +26,35 @@ The following environment variables are used by the script [codex.run](codex.run
 * `CDEH_TMP` : defined by [cdeh](https://carlowood.github.io/howto/cdeh.html). `$CDEH_TMP/env.base` is expected to contain the environment associated with the `/` (thus free of any project specific definitions) and will be copied to `$HOME_CODEX/cdeh/env.base` so that `cdeh` also works inside the container resulting in the same environment as on the host.
 * `GITACHE_ROOT` : will be bind-mounted read-write inside the container, sharing the [gitache](https://github.com/CarloWood/gitache) root with the host.
 * `CODEX_EXTRA_WRITABLE_ROOTS` : a bash array with additional paths - not used by opencode.
-* `CODEX_RUN_OPENCODE` : defined to `1` (see above).
+* `CODEX_RUN_OPENCODE` : defined to `1` (set by the `codex` bash function, see above).
+
+## Defined in the container (visible by `opencode`)
+
+The following environment variables are changed and exported (if not already) by the `codex.run` script:
+
+* `HOME` : set to `HOME_CODEX` (`/opt/ext4/nvme2/codex`, see above).
+* `CODEX_REPOBASE` : unchanged: equal to `$REPOBASE`.
+* `CODEX_MODE` : one of `"shell"`, `"bash"`, `"analyst"`, `"planner"` or `"coder"`.
+* `CODEX_RUN_OPENCODE` : defined to `1` (set by the `codex` bash function, see above).
+
+The following environment variables are set by `~/.bash_profile` inside the container:
+
+* `CODEX_WORKSPACE` : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/codex/workspace`, the directory that is the bind-mount location for the host directory `$PROJECTDIR`.
+* `HOME_CODEX` : set to `$HOME` and therefore equal to `/opt/ext4/nvme2/codex` - the same value that it had on the host.
+* `CDEH_ROOT` : set to `$HOME/cdeh`, aka `/opt/ext4/nvme2/codex/cdeh`, the containers own [cdeh](https://carlowood.github.io/howto/cdeh.html) root. This directory contains the `env.bashrc` and `do_prompt` files copied by [`codex.run`](codex.run). Also the host file `$CDEH_TMP/env.base` (see above) was copied there by `codex.run`. Finally it contains all `env.source` files that normally are printed by `pe` copied here as `env.host$nr`. All this is just needed to rebuild the environment inside the container (that is being documented here).
+* `REPOROOT` : equal to `$CODEX_WORKSPACE/$CODEX_REPOBASE` (the repository root).
+* `CODEX_INSIDE_ENVIRONMENT` : set to `1`.
+* `TOPPROJECT`: set to `$CODEX_WORKSPACE`. Note that `env.compiler` is sourced from `$CODEX_WORKSPACE/env.compiler` these days; so not sure if changing `TOPPROJECT` makes sense here.
+* `REPOROOT` : set to `$CODEX_WORKSPACE/$CODEX_REPOBASE`, and thus equal to the container directory that is the bind-mount location for the host `$REPOROOT`.
+* `PATH` : set to `"$HOME/.local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"`.
+* `XDG_CACHE_HOME` : set to `"$CODEX_WORKSPACE/cache/xdg"`.
+* `OPENCODE_DISABLE_CHANNEL_DB` : set to `1`.
+
+Environment variables that are changed unless `$CODEX_MODE` is `"shell"`.
+
+* `PROMPT_COMMAND` : unset - this is not an interactive environment so [cdeh](https://carlowood.github.io/howto/cdeh.html) is turned off.
+* `HISTFILE` : set to `"$CDEH_HISTROOT$CODEX_WORKSPACE/history"`.
+* `PS1` set to `"codex-\w>"`.
 
 # Debugging the bash functions
 
