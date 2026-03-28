@@ -58,8 +58,6 @@ GITACHE_ROOT=/opt/gitache
 
 # Set by 'project_environment'
 CODEX_HOME=/home/carlo/.codex
-CODEX_REPOBASE=openai-codex.git
-CODEX_WORKSPACE=/home/carlo/projects/github/codex
 HOME_CODEX=/opt/ext4/nvme2/codex
 REPOROOT=/home/carlo/projects/github/codex/openai-codex.git
 PLANROOT=/home/carlo/projects/github/codex/AAP
@@ -79,8 +77,6 @@ daniel:~/projects/github/codex>pe
 /home/carlo/projects/env.source
 ```
 
-First `/home/carlo/projects/env.source` is loaded, note how that loads `env.codex` that is part of this project.
+First [`/home/carlo/projects/env.source`](env.projects) is loaded that has been added to this project
+for convenience, note how that loads [`env.codex`](env.codex) that is also part of this project.
 Then [`/home/carlo/projects/github/codex/env.source`](env.source) is loaded that is also part of this project.
-
-At the moment of writing the contents of my general "all projects" environment
-was [`/home/carlo/projects/env.source`](https://gist.github.com/CarloWood/e64fab9be942657054604f8f6d045d41).
