@@ -9,16 +9,8 @@ if [ -z "$PROJECTDIR" ]; then
   echo "Error: PROJECTDIR not set."
   exit 1
 fi
-if [ -z "$CODEX_WORKSPACE" ]; then
-  echo "Error: CODEX_WORKSPACE not set."
-  exit 1
-fi
-if [ -z "$CODEX_REPOBASE" ]; then
-  echo "Error: CODEX_REPOBASE not set."
-  exit 1
-fi
-if [ "$REPOROOT" != "$CODEX_WORKSPACE/$CODEX_REPOBASE" ]; then
-  echo "Error: REPOROOT != CODEX_WORKSPACE/CODEX_REPOBASE"
+if [ "$REPOROOT" != "$PROJECTDIR/$REPOBASE" ]; then
+  echo "Error: REPOROOT != PROJECTDIR/REPOBASE"
   exit 1
 fi
 if [ -z "$CCACHE_DIR" ]; then
@@ -47,9 +39,9 @@ CODEX_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
 echo "CODEX_XDG_ROOT=\"$CODEX_XDG_ROOT\""
 
 function __cdeh_restore_host_environment() {
-  # Store the base environment to $CODEX_WORKSPACE/env.base.
+  # Store the base environment to $PROJECTDIR/env.base.
   cp "$CDEH_TMP/env.base" "$HOME_CODEX/cdeh/env.base" 
-  # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, CODEX_WORKSPACE).
+  # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, PROJECTDIR).
   echo "# Host env.source files not part of this container." > "$HOME_CODEX/env.source"
   # This is the same as the first part of `resource`. It builds CDEH_ENVFILES.
   __cdeh_rebuild_source_dirs
@@ -57,7 +49,7 @@ function __cdeh_restore_host_environment() {
   __cdeh_rebuild_envfiles
   local cdeh_envfiles=$(cat "$CDEH_TMP/envfiles")
   # Finally do the same thing as the part of resource: __cdeh_resource, but without actually sourcing or reset our own environment.
-  local codex_workspace_realpath=$(realpath "$CODEX_WORKSPACE")
+  local codex_workspace_realpath=$(realpath "$PROJECTDIR")
   local CDEH_SAVE_IFS="$IFS"
   IFS='
   ';
@@ -235,7 +227,7 @@ add_ro () {  # Usage: add_ro SRC DST
 
 # Determine which command to run.
 del_path $HOME/bin      # Do not run the codex script (again).
-CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$CODEX_WORKSPACE'%'$HOME_CODEX'/workspace%')"
+CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$PROJECTDIR'%'$HOME_CODEX'/workspace%')"
 echo "CODEX_COMMAND = $CODEX_COMMAND"
 SESSION_ID=
 # This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting codex.
@@ -442,7 +434,7 @@ bwrap_args=(
   --ro-bind "$HOST_XAUTHORITY" "$CODEX_XAUTHORITY"
   --bind "$HOME_USER/.codex" "$HOME_CODEX/.codex"
   # OpenAI Codex CAN write to the following directories (see writable_roots):
-  --bind "$CODEX_WORKSPACE" "$HOME_CODEX/workspace"
+  --bind "$PROJECTDIR" "$HOME_CODEX/workspace"
   # Use a file that resides in this project as .bash_profile in the container.
   --ro-bind "$HOME_USER/projects/github/codex/dot-bash_profile" "$HOME_CODEX/.bash_profile"
   # Remount $HOME_CODEX read-only, now that all bind mounts have been added to it.
@@ -465,11 +457,11 @@ if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
   if [[ $CODEX_MODE == "planner" ]]; then
     bwrap_args+=(
       # OpenAI Codex CAN write to the following directories (see writable_roots):
-      --bind "$CODEX_WORKSPACE/AAP" "$HOME_CODEX/workspace/AAP"
+      --bind "$PROJECTDIR/AAP" "$HOME_CODEX/workspace/AAP"
     )
   fi
   bwrap_args+=(
-    # Remount $CODEX_WORKSPACE read-only, now that all bind mounts have been added to it.
+    # Remount $PROJECTDIR read-only, now that all bind mounts have been added to it.
     --remount-ro "$HOME_CODEX/workspace"
     # Change directory to the repository (Codex has write access here because of --sandbox workspace-write).
     --chdir "$HOME_CODEX/workspace/AAP"
@@ -477,23 +469,23 @@ if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
 else
   bwrap_args+=(
     # Unless this is the planner, we can not write to $PLANROOT.
-    --ro-bind "$CODEX_WORKSPACE/AAP" "$HOME_CODEX/workspace/AAP"
+    --ro-bind "$PROJECTDIR/AAP" "$HOME_CODEX/workspace/AAP"
     # Change directory to the repository (Codex automatically has write access here because of --sandbox workspace-write).
-    --chdir "$HOME_CODEX/workspace/$CODEX_REPOBASE/$CODEX_DIRECTORY"
+    --chdir "$HOME_CODEX/workspace/$REPOBASE/$CODEX_DIRECTORY"
   )
 fi
 
-export HOME CODEX_REPOBASE CODEX_MODE CODEX_RUN_OPENCODE
+export HOME REPOBASE CODEX_MODE CODEX_RUN_OPENCODE
 
 echo "Starting bwrap, command:"
-echo "sudo --preserve-env=HOME,CODEX_REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \\"
+echo "sudo --preserve-env=HOME,REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \\"
 echo "  ip netns exec nscodex \\"
 echo "    bwrap $(quote_args "${bwrap_args[@]}") \\"
 echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
-sudo --preserve-env=HOME,CODEX_REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \
+sudo --preserve-env=HOME,REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \
   ip netns exec nscodex \
     bwrap "${bwrap_args[@]}" \
       -- \

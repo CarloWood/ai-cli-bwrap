@@ -4,7 +4,7 @@ if [ -z "$BASH_EXECUTION_STRING" ]; then
   echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$CODEX_MODE\e[0m)."
 fi
 
-export CODEX_WORKSPACE=$HOME/workspace
+export PROJECTDIR=$HOME/workspace
 export HOME_CODEX=$HOME
 
 # Set up the CDEH environment.
@@ -16,15 +16,15 @@ source "$CDEH_ROOT/env.base"
 
 # Change the base environment.
 export CODEX_INSIDE_ENVIRONMENT=1
-export CODEX_WORKSPACE=$HOME/workspace
+export PROJECTDIR=$HOME/workspace
 # Default top project for compiling libraries.
-export TOPPROJECT=$CODEX_WORKSPACE
+export TOPPROJECT=$PROJECTDIR
 # The current project.
-export REPOROOT=$CODEX_WORKSPACE/$CODEX_REPOBASE
+export REPOROOT=$PROJECTDIR/$REPOBASE
 # Set a codex environment specific PATH.
 export PATH="$HOME/.local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
 # Set a codex environment specific xdg cache directory.
-export XDG_CACHE_HOME="$CODEX_WORKSPACE/cache/xdg"
+export XDG_CACHE_HOME="$PROJECTDIR/cache/xdg"
 # We want to use the same db name when running inside the opencode project, even though
 # in that case that is run using `bun run`.
 export OPENCODE_DISABLE_CHANNEL_DB=1
@@ -46,7 +46,7 @@ if [ "$CODEX_MODE" = "shell" ]; then
 else
   # Clear things we don't want and set things we do.
   unset PROMPT_COMMAND
-  export HISTFILE="$CDEH_HISTROOT$CODEX_WORKSPACE/history"
+  export HISTFILE="$CDEH_HISTROOT$PROJECTDIR/history"
   PS1="codex-\w>"
   unalias ssh 2>/dev/null
 fi
