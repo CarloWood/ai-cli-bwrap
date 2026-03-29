@@ -22,7 +22,7 @@ These commands bypass the OpenCode session logic and provide direct access to th
 | Command | Description |
 | :--- | :--- |
 | `opencode shell` | Starts an interactive shell inside the container. |
-| `opencode bash [args...]` | Runs `bash` with the provided arguments inside the container. |
+| `opencode bash <command> [args...]` | Runs `<command> [args...]` inside the container and exits. |
 
 #### 2. Session Management
 Use these options to control whether you are starting a fresh environment or returning to previous work.
