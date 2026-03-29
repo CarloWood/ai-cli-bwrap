@@ -38,6 +38,12 @@ fi
 CODEX_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
 echo "CODEX_XDG_ROOT=\"$CODEX_XDG_ROOT\""
 
+realpath_nolast ()
+{
+  # Expand all symlinks but not that of the basename if it is one.
+  printf '%s/%s\n' "$(realpath "$(dirname -- "$1")")" "$(basename -- "$1")"
+}
+
 function __cdeh_restore_host_environment() {
   # Store the base environment to $PROJECTDIR/env.base.
   cp "$CDEH_TMP/env.base" "$HOME_CODEX/cdeh/env.base" 
@@ -57,7 +63,7 @@ function __cdeh_restore_host_environment() {
   for __cdeh_env_file in $cdeh_envfiles;
   do
     if test "$__cdeh_env_file" != "__cdeh_reset_environment"; then
-      local cdeh_env_file_realpath=$(realpath $__cdeh_env_file)
+      local cdeh_env_file_realpath=$(realpath_nolast $__cdeh_env_file)
       if [[ "$cdeh_env_file_realpath" == "$codex_workspace_realpath"* ]]; then
         break
       fi
