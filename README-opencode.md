@@ -1,6 +1,6 @@
 # Starting opencode
 
-Opencode is started by running the bash function `opencode` defined in [env.codex](env.codex#L43).
+OpenCode is started by running the bash function `opencode` defined in [env.codex](env.codex#L43).
 
 That function simply calls the bash function `codex`, also defined in [env.codex](env.codex#L9),
 passing `--opencode` as first argument. The effect of that is that inside the `codex` bash function
@@ -9,6 +9,67 @@ sourcing [codex.run](codex.run).
 
 In other words, running `opencode [<args>]` is equivalent to running either `codex --opencode [<args>]`
 as well as running `CODEX_RUN_OPENCODE=1 codex <args>`.
+
+### Command Syntax
+
+The general structure for the command is:
+
+`opencode [command] [session-option] [agent-mode]`
+
+#### 1. Container Utilities
+These commands bypass the OpenCode session logic and provide direct access to the container environment.
+
+| Command | Description |
+| :--- | :--- |
+| `opencode shell` | Starts an interactive shell inside the container. |
+| `opencode bash [args...]` | Runs `bash` with the provided arguments inside the container. |
+
+#### 2. Session Management
+Use these options to control whether you are starting a fresh environment or returning to previous work.
+
+| Option | Description |
+| :--- | :--- |
+| `new` | Forces the creation of a brand-new session. |
+| `resume <session-id>` | Resumes a specific existing session. |
+| `-s <session-id>` | Alias for `resume <session-id>`. |
+| *(None)* | Resumes the last exited session. If no history exists, starts a `new` session. |
+
+#### 3. Agent Modes
+OpenCode supports three specialized agent types. If a mode is not explicitly provided, the system follows a specific resolution logic.
+
+* `analyst`
+* `planner`
+* `coder` (System default)
+
+---
+
+### Logic & Defaults
+
+When you run `opencode` without specific flags, the tool determines its behavior based on the following priority:
+
+#### Mode Selection Rules
+1.  **Explicit Override:** If you provide `analyst`, `planner`, or `coder` in the command, that mode is used.
+2.  **Session History:** If a `<session-id>` is provided (or resumed) and a mode is defined at `$PLANROOT/ThreadID/<session-id>/mode`, that saved mode is used.
+3.  **Fallback:** If neither of the above applies, the session defaults to **coder**.
+
+#### Automatic Session Handling
+> [!TIP]
+> If you simply type `opencode` with no arguments, the tool will automatically attempt to find the ID of the last session you closed. If it can't find a "last session" record, it will trigger the `new` session logic automatically.
+
+---
+
+### Examples "In Practice"
+
+* **Start a fresh planning session:**
+    `opencode new planner`
+* **Quick-start (Resume last or start new):**
+    `opencode`
+* **Resume a specific session with a mode override:**
+    `opencode -s 12345 analyst`
+* **Run a one-off script in the container:**
+    `opencode bash ./scripts/setup.sh`
+
+---
 
 # Environment
 
