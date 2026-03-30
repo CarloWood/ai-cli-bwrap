@@ -10,7 +10,7 @@ import { setTimeout as sleep } from "node:timers/promises";
  * Goal:
  * - Wait until opencode has created a real `ses_*` session ID for the current chat.
  * - Read the sockettap configuration from a dedicated config file.
- * - Construct the UNIX socket path as `<exec_socket_path>/$CODEX_MODE.sock`.
+ * - Construct the UNIX socket path as `<exec_socket_path>/$REPOBASE.sock`.
  * - Connect to that socket and send the same payload shape used by the
  *   `SocketTap.session()` implementation on this branch.
  * - Send the notification only once per session.
@@ -90,16 +90,16 @@ function configFile() {
  * Construct the full path to the sockettapd UNIX socket.
  *
  * The base directory is read from `exec_socket_path` in `sockettap.json`. The final
- * filename is derived from `$CODEX_MODE`, giving:
+ * filename is derived from `$REPOBASE`, giving:
  *
- *   <exec_socket_path>/$CODEX_MODE.sock
+ *   <exec_socket_path>/$REPOBASE.sock
  *
  * If the configuration file, setting, or environment variable is missing, the
  * plugin returns `undefined` and silently does nothing.
  */
 async function socketPath() {
-  const mode = process.env.CODEX_MODE;
-  if (!mode) return;
+  const repobase = process.env.REPOBASE?.replaceAll("/", "_");
+  if (!repobase) return;
   const text = await readFile(configFile(), "utf8").catch((error) => {
     if (error && typeof error === "object" && error.code === "ENOENT") {
       return;
@@ -113,7 +113,7 @@ async function socketPath() {
       ? data.exec_socket_path
       : undefined;
   if (!dir) return;
-  return path.join(dir, `${mode}.sock`);
+  return path.join(dir, `${repobase}.sock`);
 }
 
 /**

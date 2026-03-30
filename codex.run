@@ -180,11 +180,18 @@ function cleanup_nscodex()
   cleanup_xephyr
 }
 
+# Replace `/` characters with underscores.
+function filenameify()
+{
+  local s=${1//\//_}
+  printf '%s\n' "$s"
+}
+
 function start_sockettapd()
 {
   local codex_mode="$1"
   rm -f "$PROJECTDIR/sockettapd.log"
-  sockettapd --one-shot --projectdir "$PROJECTDIR" --log "$PROJECTDIR/sockettapd.log" --socket "$codex_mode"
+  sockettapd --one-shot --projectdir "$PROJECTDIR" --log "$PROJECTDIR/sockettapd.log" --socket "$(filenameify "$REPOBASE")"
 }
 
 # Set trap for cleanup.
