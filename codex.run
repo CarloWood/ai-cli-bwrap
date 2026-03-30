@@ -44,7 +44,8 @@ realpath_nolast ()
   printf '%s/%s\n' "$(realpath "$(dirname -- "$1")")" "$(basename -- "$1")"
 }
 
-function __cdeh_restore_host_environment() {
+function __cdeh_restore_host_environment()
+{
   # Store the base environment to $PROJECTDIR/env.base.
   cp "$CDEH_TMP/env.base" "$HOME_CODEX/cdeh/env.base" 
   # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, PROJECTDIR).
