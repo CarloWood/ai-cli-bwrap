@@ -227,6 +227,16 @@ quote_args() {
   echo "${quoted_args[*]}"
 }
 
+quote_shell_words() {
+  local quoted_args=()
+  local arg=
+  for arg in "$@"; do
+    printf -v arg '%q' "$arg"
+    quoted_args+=("$arg")
+  done
+  echo "${quoted_args[*]}"
+}
+
 add_ro () {  # Usage: add_ro SRC DST
   test -e "$1" && set -- "$@" "--ro-bind" "$1" "$1"
   printf '%s\0' "${@:2}"
@@ -246,7 +256,7 @@ if [ "$#" -eq 1 ] && [ "$1" == "shell" ]; then
   COMMAND="bash"
   CODEX_MODE="shell"
 elif [ "$#" -ge 1 ] && [ "$1" == "bash" ]; then
-  # Run a bash shell, including any arguments passed.
+  # Run a command through bash inside the container.
   COMMAND="bash"
   CODEX_MODE="bash"
   shift
@@ -319,8 +329,7 @@ fi
 if [[ $CODEX_MODE == "shell" ]]; then
   command_args=("-l")
 elif [[ $CODEX_MODE == "bash" ]]; then
-  shift
-  command_args=("$@")
+  command_args=("-lc" "$(quote_shell_words "$@")")
 elif [[ -n "$SESSION_ID" ]]; then
   if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
     command_args+=(-s "$SESSION_ID")
