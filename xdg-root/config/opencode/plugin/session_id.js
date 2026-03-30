@@ -13,7 +13,7 @@ import { setTimeout as sleep } from "node:timers/promises";
  * - Construct the UNIX socket path as `<exec_socket_path>/$REPOBASE.sock`.
  * - Connect to that socket and send the same payload shape used by the
  *   `SocketTap.session()` implementation on this branch.
- * - Send the notification only once per session.
+ * - Send the notification only once per session/agent combination.
  *
  * Why this exists:
  * The session ID is not known when opencode first starts. It only becomes
@@ -27,13 +27,17 @@ import { setTimeout as sleep } from "node:timers/promises";
 const waits = [0, 50, 150, 500];
 
 /**
- * Local guard that makes this plugin effectively one-shot per session ID.
- * There is no plugin API to unregister a hook after it has fired, so the
- * plugin remembers which sessions it has already reported and ignores later
- * callbacks for the same session.
+ * Local guard that tracks the last session/agent pair reported.
+ *
+ * The plugin should notify sockettapd whenever the active session changes, the
+ * active agent changes, or both.
  */
-const sent = new Set();
+let lastSentKey;
 const home = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config");
+
+function pairKey(sessionID, agentName) {
+  return `${sessionID}\0${agentName ?? ""}`;
+}
 
 /**
  * Local helper.
@@ -56,13 +60,14 @@ function escape(value) {
  *
  * Intended effect:
  * Build the exact payload that sockettapd expects for a session notification on
- * this branch: the session ID and current working directory wrapped in the same
- * `<config-session>` structure used by `src/util/sockettap.ts`.
+ * this branch: the session ID, agent name, and current working directory wrapped
+ * in the same `<config-session>` structure used by `src/util/sockettap.ts`.
  */
-function payload(sessionID, cwd) {
+function payload(sessionID, agentName, cwd) {
   return [
     "<config-session>",
     `  <session-id>${escape(sessionID)}</session-id>`,
+    `  <agent>${escape(agentName)}</agent>`,
     `  <cwd>${escape(cwd)}</cwd>`,
     "</config-session>",
     "",
@@ -145,16 +150,17 @@ async function write(file, body) {
  * Local helper.
  *
  * Intended effect:
- * Write the Session ID and current working directory to sockettapd.
+ * Write the Session ID, agent name, and current working directory to
+ * sockettapd.
  *
  * This mirrors the retry behavior from the in-repo `SocketTap.session()`
  * implementation so that a socket listener that starts slightly later still has
  * a chance to receive the notification.
  */
-async function notify(sessionID, cwd) {
+async function notify(sessionID, agentName, cwd) {
   const file = await socketPath();
   if (!file) return false;
-  const body = payload(sessionID, cwd);
+  const body = payload(sessionID, agentName, cwd);
 
   for (const wait of waits) {
     if (wait) await sleep(wait);
@@ -188,14 +194,15 @@ export const SessionIdPlugin = async (input) => {
      * available.
      *
      * Intended effect:
-     * Notify sockettapd exactly once for each session, then suppress all later
-     * notifications for that same `ses_*` value.
+     * Notify sockettapd whenever the current session/agent pair changes, then
+     * suppress repeated notifications until that pair changes again.
      */
     "chat.message": async (ctx) => {
-      if (sent.has(ctx.sessionID)) return;
-      const ok = await notify(ctx.sessionID, cwd);
+      const key = pairKey(ctx.sessionID, ctx.agent);
+      if (lastSentKey === key) return;
+      const ok = await notify(ctx.sessionID, ctx.agent, cwd);
       if (!ok) return;
-      sent.add(ctx.sessionID);
+      lastSentKey = key;
     },
   };
 };
