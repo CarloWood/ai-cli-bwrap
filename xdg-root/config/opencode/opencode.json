@@ -108,6 +108,7 @@
       "ln *": "allow",
       "ls *": "allow",
       "nl *": "allow",
+      "node --check *": "allow",
       "perl *": "allow",
       "pgrep *": "allow",
       "printf *": "allow",
@@ -194,7 +195,8 @@
           "git *": "allow",
           "just *": "allow",
           "make *": "allow",
-          "ninja *": "allow"
+          "ninja *": "allow",
+          "node *": "allow"
         },
         "edit": {
           "{env:REPOROOT}/**": "allow"
