@@ -475,11 +475,12 @@ if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
     --chdir "$HOME_CODEX/workspace/AAP"
   )
 else
+  CLEAN_CWD=$(realpath --no-symlinks "$HOME_CODEX/workspace/$REPOBASE/$CODEX_DIRECTORY")
   bwrap_args+=(
     # Unless this is the planner, we can not write to $PLANROOT.
     --ro-bind "$PROJECTDIR/AAP" "$HOME_CODEX/workspace/AAP"
     # Change directory to the repository (Codex automatically has write access here because of --sandbox workspace-write).
-    --chdir "$HOME_CODEX/workspace/$REPOBASE/$CODEX_DIRECTORY"
+    --chdir "$CLEAN_CWD"
   )
 fi
 
