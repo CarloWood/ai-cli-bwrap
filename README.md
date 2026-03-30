@@ -73,10 +73,15 @@ help you if you want to make a chance to understand what is going on:
 For the `~/projects/github/codex` project, the environment files are: (pe = print environment):
 ```
 daniel:~/projects/github/codex>pe
+/home/carlo/projects/github/codex/codex-bwrap/env.source
 /home/carlo/projects/github/codex/env.source
+/home/carlo/projects/github/env.source
 /home/carlo/projects/env.source
 ```
 
 First [`/home/carlo/projects/env.source`](env.projects) is loaded that has been added to this project
 for convenience, note how that loads [`env.codex`](env.codex) that is also part of this project.
-Then [`/home/carlo/projects/github/codex/env.source`](env.source) is loaded that is also part of this project.
+Then `/home/carlo/projects/github/env.source` is loaded (not relevant here), next `/home/carlo/projects/github/codex/env.source`
+is loaded that sets up the environment for `openai-codex.git` (see above) and finally
+[`/home/carlo/projects/github/codex/codex-bwrap/env.source`](env.source) is loaded that is also part of this project,
+that sets the environment for this project instead (`codex-bwrap`).
