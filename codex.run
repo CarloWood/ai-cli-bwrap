@@ -33,6 +33,11 @@ if [[ "$HOME_CODEX" != "/opt/ext4/nvme2/codex" ]]; then
   echo "HOME_CODEX has an unexpected value."
   exit 1
 fi
+if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
+  # This is just a sanity check to make sure that sockettapd will write debug output.
+  echo "Error: LIBCWD_RCFILE_OVERRIDE_NAME not set."
+  exit 1
+fi
 
 # This is the directory that is bind mounted in the container as ~/workspace/.xdg.
 CODEX_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
@@ -191,6 +196,8 @@ function start_sockettapd()
 {
   local codex_mode="$1"
   rm -f "$PROJECTDIR/sockettapd.log"
+  echo "Running: sockettapd --one-shot --projectdir \"$PROJECTDIR\" --log \"$PROJECTDIR/sockettapd.log\" --socket \"$(filenameify "$REPOBASE")\""
+  which sockettapd
   sockettapd --one-shot --projectdir "$PROJECTDIR" --log "$PROJECTDIR/sockettapd.log" --socket "$(filenameify "$REPOBASE")"
 }
 
@@ -374,7 +381,7 @@ else
 fi
 echo -e "Running $AGENT in \e[31m\"$CODEX_MODE\" mode\e[0m."
 
-if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" || $CODEX_MODE == "coder" ]]; then
+if [[ $CODEX_MODE != "bash" && $CODEX_MODE != "shell" ]]; then
   # Start the sockettapd.
   start_sockettapd "$CODEX_MODE"
   # Make the agent listen on the correct socket.
