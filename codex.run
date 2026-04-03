@@ -299,6 +299,7 @@ fi
 
 # Setup Agent Assisted Planner (AAP) project.
 setup_aap
+PLANBASE="$(basename "$PLANROOT")"
 
 if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   echo "Running opencode..."
@@ -318,7 +319,7 @@ if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
 else
   # Construct roots_json.
   if [[ $CODEX_MODE == "planner" ]]; then
-    roots_json='["'$HOME_CODEX'/workspace/AAP"'
+    roots_json='["'$HOME_CODEX'/workspace/'$PLANBASE'"'
   elif [[ $CODEX_MODE == "coder" ]]; then
     roots_json='["'$HOME_CODEX'/workspace"'
   fi
