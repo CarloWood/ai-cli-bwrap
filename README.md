@@ -25,11 +25,9 @@ last used Session ID for that mode.
 * resume <session-id> : resume a previous Session ID.
 * coder/planner : enter, or continue last coder/planner mode.
 
-The coder/planner modes also start [sockettapd](https://github.com/CarloWood/codex-sockettapd)
-listening on `$PROJECTDIR/AAP/$CODEX_MODE.sock`, where `CODEX_MODE` is respectively `planner` or `coder`.
-For that to work you need the `cw_exec_socket_tap` branch that is part of the `master` branch
-of my [codex fork](https://github.com/CarloWood/openai-codex), or the [`session_id.js`](opencode-config/plugin/session_id.js)
-plugin for opencode.
+Any non- shell or bash mode also starts [sockettapd](https://github.com/CarloWood/codex-sockettapd) listening on `$PLANROOT/$REPOBASE.sock`.
+For that to work you need the `cw_exec_socket_tap` branch that is part of the `master` branch of my [codex fork](https://github.com/CarloWood/openai-codex),
+or the [`session_id.js`](xdg-root/config/opencode/plugin/session_id.js) plugin for opencode.
 
 The project also requires [remountd](https://github.com/CarloWood/remountd), a systemd service,
 to be installed and enabled. This allows for switching between a read-only and read-write
@@ -60,7 +58,7 @@ GITACHE_ROOT=/opt/gitache
 CODEX_HOME=/home/carlo/.codex
 HOME_CODEX=/opt/ext4/nvme2/codex
 REPOROOT=/home/carlo/projects/github/codex/openai-codex.git
-PLANROOT=/home/carlo/projects/github/codex/AAP
+PLANROOT=/home/carlo/projects/github/codex/openai-codex-AAP
 ```
 
 # cdeh environment
