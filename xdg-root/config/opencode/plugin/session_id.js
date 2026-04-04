@@ -1,28 +1,22 @@
-import { readFile } from "node:fs/promises";
 import { createConnection } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 /**
- * opencode plugin: publish the session ID and working directory to sockettapd.
+ * opencode plugin: publish the session ID, agent name and working directory to sockettapd.
  *
  * Goal:
  * - Wait until opencode has created a real `ses_*` session ID for the current chat.
- * - Read the sockettap configuration from a dedicated config file.
- * - Construct the UNIX socket path as `<exec_socket_path>/$REPOBASE.sock`.
+ * - Construct the UNIX socket path as `$PLANROOT/$REPOBASE.sock`.
  * - Connect to that socket and send the same payload shape used by the
  *   `SocketTap.session()` implementation on this branch.
- * - Send the notification only once per session/agent combination.
+ * - Send the notification every time session ID or agent name change.
  *
  * Why this exists:
  * The session ID is not known when opencode first starts. It only becomes
  * available once opencode has created the first chat message for a session.
  * This plugin hooks into that moment and performs the external notification.
- *
- * Configuration:
- * - `$XDG_CONFIG_HOME/opencode/sockettap.json`
- * - expected shape: `{ "exec_socket_path": "/path/to/socket/dir" }`
  */
 const waits = [0, 50, 150, 500];
 
@@ -33,7 +27,6 @@ const waits = [0, 50, 150, 500];
  * active agent changes, or both.
  */
 let lastSentKey;
-const home = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config");
 
 function pairKey(sessionID, agentName) {
   return `${sessionID}\0${agentName ?? ""}`;
@@ -72,20 +65,6 @@ function payload(sessionID, agentName, cwd) {
     "</config-session>",
     "",
   ].join("\n");
-}
-
-/**
- * Local helper.
- *
- * Intended effect:
- * Resolve which sockettap configuration file to read.
- *
- * The plugin uses a dedicated file under the global opencode config directory so
- * that custom plugin settings do not interfere with opencode's own validated
- * `tui.json` format.
- */
-function configFile() {
-  return path.join(home, "opencode", "sockettap.json");
 }
 
 /**
