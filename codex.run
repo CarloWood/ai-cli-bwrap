@@ -309,7 +309,7 @@ else
     fi
   fi
   # Try to deduce SESSION_ID from CODEX_MODE if the former wasn't specified on the command line.
-  if [[ -z "$SESSION_ID" && -L "$PLANROOT/$CODEX_MODE/id" ]]; then
+  if [[ -z "$SESSION_ID" && -z ${CODEX_RUN_NEW_SESSION:-} && -L "$PLANROOT/$CODEX_MODE/id" ]]; then
     SESSION_ID=$(basename "$(readlink "$PLANROOT/$CODEX_MODE/id")")
   fi
 fi
@@ -370,6 +370,12 @@ elif [[ -n "$SESSION_ID" ]]; then
     fi
   else
     command_args+=(resume "$SESSION_ID")
+  fi
+else
+  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+    if [[ $CODEX_MODE != "unknown" ]]; then
+      command_args+=(--agent "$CODEX_MODE")
+    fi
   fi
 fi
 
@@ -486,7 +492,8 @@ bwrap_args=(
   --ro-bind "$HOST_XAUTHORITY" "$CODEX_XAUTHORITY"
   # Only really needed for the Codex CLI, but well.
   --bind "$HOME_USER/.codex" "$HOME_CODEX/.codex"
-  # OpenAI Codex CAN write to the following directories (see writable_roots):
+  # Mount the whole workspace as read-only.
+  #FIXME --ro-bind "$PROJECTDIR" "$HOME_CODEX/workspace"
   --bind "$PROJECTDIR" "$HOME_CODEX/workspace"
   # Use a file that resides in this project as .bash_profile in the container.
   --ro-bind "$HOME_USER/projects/github/codex/codex-bwrap/dot-bash_profile" "$HOME_CODEX/.bash_profile"
