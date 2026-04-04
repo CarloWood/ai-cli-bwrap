@@ -94,31 +94,23 @@ function configFile() {
  * Intended effect:
  * Construct the full path to the sockettapd UNIX socket.
  *
- * The base directory is read from `exec_socket_path` in `sockettap.json`. The final
- * filename is derived from `$REPOBASE`, giving:
+ * The base directory is read from the environment variable PLANROOT.
+ * The final filename is derived from REPOBASE, giving:
  *
- *   <exec_socket_path>/$REPOBASE.sock
+ *   $PLANROOT/$REPOBASE.sock
  *
- * If the configuration file, setting, or environment variable is missing, the
- * plugin returns `undefined` and silently does nothing.
+ * Any slash characters in REPOBASE are replaced with underscores.
+ * If an environment variable is missing or empty, the plugin returns
+ * `undefined` and silently does nothing.
  */
-async function socketPath() {
+function socketPath() {
+  const planroot = process.env.PLANROOT;
+  if (!planroot) return;
+
   const repobase = process.env.REPOBASE?.replaceAll("/", "_");
   if (!repobase) return;
-  const text = await readFile(configFile(), "utf8").catch((error) => {
-    if (error && typeof error === "object" && error.code === "ENOENT") {
-      return;
-    }
-    throw error;
-  });
-  if (!text) return;
-  const data = JSON.parse(text);
-  const dir =
-    typeof data.exec_socket_path === "string"
-      ? data.exec_socket_path
-      : undefined;
-  if (!dir) return;
-  return path.join(dir, `${repobase}.sock`);
+
+  return path.join(planroot, `${repobase}.sock`);
 }
 
 /**
