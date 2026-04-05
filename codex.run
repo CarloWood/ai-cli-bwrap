@@ -496,7 +496,7 @@ bwrap_args=(
   #FIXME --ro-bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
   --bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
   # Use a file that resides in this project as .bash_profile in the container.
-  --ro-bind "$HOME_USER/projects/github/codex/codex-bwrap/dot-bash_profile" "$HOME_CODEX/.bash_profile"
+  --ro-bind "$HOME_USER/projects/github/ai-cli/codex-bwrap/dot-bash_profile" "$HOME_CODEX/.bash_profile"
   # Remount $HOME_CODEX read-only, now that all bind mounts have been added to it.
   --remount-ro "$HOME_CODEX"
   # Codex needs write access to the gitache root.
