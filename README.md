@@ -41,7 +41,7 @@ In order to control the environment, you are recommended to use [cdeh](https://c
 For example, while working on the openai-codex project itself,
 the following environment variables (not an exhaustive list) are set:
 ```
-PROJECTDIR=/home/carlo/projects/github/codex
+WORKSPACE_ROOT=/home/carlo/projects/github/codex
 REPOBASE=openai-codex.git
 
 # run 'project_environment' here

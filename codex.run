@@ -5,12 +5,12 @@
 pre_path "/home/carlo/projects/aicxx/codex-sockettapd/build/src"
 
 # Sanity checks.
-if [ -z "$PROJECTDIR" ]; then
-  echo "Error: PROJECTDIR not set."
+if [ -z "$WORKSPACE_ROOT" ]; then
+  echo "Error: WORKSPACE_ROOT not set."
   exit 1
 fi
-if [ "$REPOROOT" != "$PROJECTDIR/$REPOBASE" ]; then
-  echo "Error: REPOROOT != PROJECTDIR/REPOBASE"
+if [ "$REPOROOT" != "$WORKSPACE_ROOT/$REPOBASE" ]; then
+  echo "Error: REPOROOT != WORKSPACE_ROOT/REPOBASE"
   exit 1
 fi
 if [ -z "$CCACHE_DIR" ]; then
@@ -51,9 +51,9 @@ realpath_nolast ()
 
 function __cdeh_restore_host_environment()
 {
-  # Store the base environment to $PROJECTDIR/env.base.
+  # Store the base environment to $WORKSPACE_ROOT/env.base.
   cp "$CDEH_TMP/env.base" "$HOME_CODEX/cdeh/env.base" 
-  # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, PROJECTDIR).
+  # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, WORKSPACE_ROOT).
   echo "# Host env.source files not part of this container." > "$HOME_CODEX/env.source"
   # This is the same as the first part of `resource`. It builds CDEH_ENVFILES.
   __cdeh_rebuild_source_dirs
@@ -61,7 +61,7 @@ function __cdeh_restore_host_environment()
   __cdeh_rebuild_envfiles
   local cdeh_envfiles=$(cat "$CDEH_TMP/envfiles")
   # Finally do the same thing as the part of resource: __cdeh_resource, but without actually sourcing or reset our own environment.
-  local codex_workspace_realpath=$(realpath "$PROJECTDIR")
+  local codex_workspace_realpath=$(realpath "$WORKSPACE_ROOT")
   local CDEH_SAVE_IFS="$IFS"
   IFS='
   ';
@@ -197,11 +197,11 @@ function start_sockettapd()
   local codex_mode="$1"
   local name="$2"
 
-  rm -f "$PROJECTDIR/sockettapd-$2.log"
+  rm -f "$WORKSPACE_ROOT/sockettapd-$2.log"
 
   echo "Running: "\
- "sockettapd --planroot \"$PLANROOT\" --log \"$PROJECTDIR/sockettapd-$name.log\" --socket \"$name\""
-  sockettapd --planroot "$PLANROOT"   --log "$PROJECTDIR/sockettapd-$name.log"   --socket "$name"
+ "sockettapd --planroot \"$PLANROOT\" --log \"$WORKSPACE_ROOT/sockettapd-$name.log\" --socket \"$name\""
+  sockettapd --planroot "$PLANROOT"   --log "$WORKSPACE_ROOT/sockettapd-$name.log"   --socket "$name"
 }
 
 # Set trap for cleanup.
@@ -261,7 +261,7 @@ add_ro () {  # Usage: add_ro SRC DST
 
 # Determine which command to run.
 del_path $HOME/bin      # Do not run the codex script (again).
-CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$PROJECTDIR'%'$HOME_CODEX'/workspace%')"
+CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$WORKSPACE_ROOT'%'$HOME_CODEX'/workspace%')"
 echo "CODEX_COMMAND = $CODEX_COMMAND"
 # This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting codex.
 COMMAND="$HOME_CODEX/.local/bin/start_codex"
@@ -493,8 +493,8 @@ bwrap_args=(
   # Only really needed for the Codex CLI, but well.
   --bind "$HOME_USER/.codex" "$HOME_CODEX/.codex"
   # Mount the whole workspace as read-only.
-  #FIXME --ro-bind "$PROJECTDIR" "$HOME_CODEX/workspace"
-  --bind "$PROJECTDIR" "$HOME_CODEX/workspace"
+  #FIXME --ro-bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
+  --bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
   # Use a file that resides in this project as .bash_profile in the container.
   --ro-bind "$HOME_USER/projects/github/codex/codex-bwrap/dot-bash_profile" "$HOME_CODEX/.bash_profile"
   # Remount $HOME_CODEX read-only, now that all bind mounts have been added to it.
@@ -517,7 +517,7 @@ if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
   if [[ $CODEX_MODE == "planner" ]]; then
     bwrap_args+=(
       # Mount the PLANROOT read-write.
-      --bind "$PROJECTDIR/$PLANBASE" "$HOME_CODEX/workspace/$PLANBASE"
+      --bind "$WORKSPACE_ROOT/$PLANBASE" "$HOME_CODEX/workspace/$PLANBASE"
     )
   fi
   bwrap_args+=(
@@ -528,7 +528,7 @@ else
   CLEAN_CWD=$(realpath --no-symlinks "$HOME_CODEX/workspace/$REPOBASE/$CODEX_DIRECTORY")
   bwrap_args+=(
     # Mount the REPOROOT read-write.
-    --bind "$PROJECTDIR/$REPOBASE" "$HOME_CODEX/workspace/$REPOBASE"
+    --bind "$WORKSPACE_ROOT/$REPOBASE" "$HOME_CODEX/workspace/$REPOBASE"
     # Change directory to the REPOROOT repository.
     --chdir "$CLEAN_CWD"
   )
