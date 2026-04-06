@@ -1,11 +1,11 @@
 if [ -z "$BASH_EXECUTION_STRING" ]; then
-  AGENT="CODEX"
-  [[ -z "$CODEX_RUN_OPENCODE" ]] || AGENT="OPENCODE"
-  echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$CODEX_MODE\e[0m)."
+  AGENT="AICLI"
+  [[ -z "$AICLI_RUN_OPENCODE" ]] || AGENT="OPENCODE"
+  echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$AICLI_MODE\e[0m)."
 fi
 
 export WORKSPACE_ROOT=$HOME/workspace
-export HOME_CODEX=$HOME
+export HOME_AICLI=$HOME
 
 # Set up the CDEH environment.
 CDEH_ROOT=$HOME/cdeh
@@ -15,21 +15,21 @@ source $CDEH_ROOT/env.bashrc
 source "$CDEH_ROOT/env.base"
 
 # Change the base environment.
-export CODEX_INSIDE_ENVIRONMENT=1
+export AICLI_INSIDE_ENVIRONMENT=1
 export WORKSPACE_ROOT=$HOME/workspace
 # Default top project for compiling libraries.
 export TOPPROJECT=$WORKSPACE_ROOT
 # The current project.
 export REPOROOT=$WORKSPACE_ROOT/$REPOBASE
-# Set a codex environment specific PATH.
+# Set a CLI environment specific PATH.
 export PATH="$HOME/.local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
-# Set a codex environment specific xdg cache directory.
+# Set a CLI environment specific xdg cache directory.
 export XDG_CACHE_HOME="$WORKSPACE_ROOT/cache/xdg"
 # We want to use the same db name when running inside the opencode project, even though
 # in that case that is run using `bun run`.
 export OPENCODE_DISABLE_CHANNEL_DB=1
 
-if [ "$CODEX_MODE" = "shell" ]; then
+if [ "$AICLI_MODE" = "shell" ]; then
   #------------------------------------------------------------------------------
   # These are set for convenience, while using this environment myself.
   export PASSWORD_STORE_X_SELECTION=primary
@@ -40,14 +40,14 @@ if [ "$CODEX_MODE" = "shell" ]; then
   alias ls='ls --file-type --group-directories-first --color=auto'
 
   # Set a fancy color prompt
-  PS1PREFIX="$HOSTNAME-\[\e[31m\]codex\[\e[0m\]:"
+  PS1PREFIX="$HOSTNAME-\[\e[31m\]ai-cli\[\e[0m\]:"
   PS1=$PS1PREFIX'\[\e[35m\]\w\[\e[32`if [[ ${EUID} == 0 ]]; then echo ";7"; fi`m\]>\[\e[30;47;0m\]'
   #------------------------------------------------------------------------------
 else
   # Clear things we don't want and set things we do.
   unset PROMPT_COMMAND
   export HISTFILE="$CDEH_HISTROOT$WORKSPACE_ROOT/history"
-  PS1="codex-\w>"
+  PS1="ai-cli-\w>"
   unalias ssh 2>/dev/null
 fi
 

@@ -17,7 +17,7 @@ To (re)compile, run `makepkg -si` in openai-codex/.
 
 Alternatively, have
 
-daniel:~/projects/github/codex/openai-codex/src>ls -l
+daniel:~/projects/github/ai-cli/openai-codex/src>ls -l
 total 4
 lrwxrwxrwx 1 carlo carlo 22 Dec 19 18:12 openai-codex -> ../../openai-codex.git
 

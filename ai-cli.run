@@ -1,5 +1,5 @@
 # This file must be sourced (with the full environment, including aliases, intact).
-# Use the alias `codex` to use it.
+# Use the alias `ai_cli` to use it.
 
 # Run sockettapd from its project directory.
 pre_path "/home/carlo/projects/aicxx/codex-sockettapd/build/src"
@@ -29,8 +29,8 @@ if [[ ! -d "/run/remountd" ]]; then
   echo "Error: /run/remountd does not exist. Run `systemctl enable --now remountd.socket`."
   exit 1
 fi
-if [[ "$HOME_CODEX" != "/opt/ext4/nvme2/codex" ]]; then
-  echo "HOME_CODEX has an unexpected value."
+if [[ "$HOME_AICLI" != "/opt/ext4/nvme2/codex" ]]; then
+  echo "HOME_AICLI has an unexpected value."
   exit 1
 fi
 if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
@@ -40,8 +40,8 @@ if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
 fi
 
 # This is the directory that is bind mounted in the container as ~/workspace/.xdg.
-CODEX_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
-echo "CODEX_XDG_ROOT=\"$CODEX_XDG_ROOT\""
+AICLI_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
+echo "AICLI_XDG_ROOT=\"$AICLI_XDG_ROOT\""
 
 realpath_nolast ()
 {
@@ -52,16 +52,16 @@ realpath_nolast ()
 function __cdeh_restore_host_environment()
 {
   # Store the base environment to $WORKSPACE_ROOT/env.base.
-  cp "$CDEH_TMP/env.base" "$HOME_CODEX/cdeh/env.base" 
+  cp "$CDEH_TMP/env.base" "$HOME_AICLI/cdeh/env.base" 
   # Accumulate env.source files on top of this base that are not part of the bwrap environment (aka, WORKSPACE_ROOT).
-  echo "# Host env.source files not part of this container." > "$HOME_CODEX/env.source"
+  echo "# Host env.source files not part of this container." > "$HOME_AICLI/env.source"
   # This is the same as the first part of `resource`. It builds CDEH_ENVFILES.
   __cdeh_rebuild_source_dirs
   rm -f "$CDEH_TMP/envfiles"
   __cdeh_rebuild_envfiles
   local cdeh_envfiles=$(cat "$CDEH_TMP/envfiles")
   # Finally do the same thing as the part of resource: __cdeh_resource, but without actually sourcing or reset our own environment.
-  local codex_workspace_realpath=$(realpath "$WORKSPACE_ROOT")
+  local workspace_realpath=$(realpath "$WORKSPACE_ROOT")
   local CDEH_SAVE_IFS="$IFS"
   IFS='
   ';
@@ -70,25 +70,25 @@ function __cdeh_restore_host_environment()
   do
     if test "$__cdeh_env_file" != "__cdeh_reset_environment"; then
       local cdeh_env_file_realpath=$(realpath_nolast $__cdeh_env_file)
-      if [[ "$cdeh_env_file_realpath" == "$codex_workspace_realpath"* ]]; then
+      if [[ "$cdeh_env_file_realpath" == "$workspace_realpath"* ]]; then
         break
       fi
-      cp "$__cdeh_env_file" "$HOME_CODEX/cdeh/env.host$nr"
-      echo -e "# Copy of $__cdeh_env_file.\nsource \"\$CDEH_ROOT/env.host$nr\"" >> "$HOME_CODEX/env.source"
+      cp "$__cdeh_env_file" "$HOME_AICLI/cdeh/env.host$nr"
+      echo -e "# Copy of $__cdeh_env_file.\nsource \"\$CDEH_ROOT/env.host$nr\"" >> "$HOME_AICLI/env.source"
       nr=$((nr + 1))
     fi
   done
-  echo "export DISPLAY=$CODEX_DISPLAY" >> "$HOME_CODEX/env.source"
-  echo "export XAUTHORITY=$CODEX_XAUTHORITY" >> "$HOME_CODEX/env.source"
+  echo "export DISPLAY=$AICLI_DISPLAY" >> "$HOME_AICLI/env.source"
+  echo "export XAUTHORITY=$AICLI_XAUTHORITY" >> "$HOME_AICLI/env.source"
   IFS="$CDEH_SAVE_IFS"
 }
 
 # Included in the 'host' environement.
 HOST_XAUTHORITY="$HOME/.Xauthority-xephyr"
-CODEX_XAUTHORITY="$HOME_CODEX/.Xauthority-xephyr"
-CODEX_DISPLAY=":100"
+AICLI_XAUTHORITY="$HOME_AICLI/.Xauthority-xephyr"
+AICLI_DISPLAY=":100"
 
-# Create $HOME_CODEX/env.source
+# Create $HOME_AICLI/env.source
 __cdeh_restore_host_environment
 
 #==============================================================================
@@ -104,7 +104,7 @@ set -e
 # End new service.
 #==============================================================================
 
-XEPHYR_BASE=$HOME_CODEX/.Xephyr
+XEPHYR_BASE=$HOME_AICLI/.Xephyr
 mkdir -p $XEPHYR_BASE
 XEPHYR_PIDFILE="$XEPHYR_BASE/pid"
 XEPHYR_COUNTFILE="$XEPHYR_BASE/refcount"
@@ -127,11 +127,11 @@ function start_xephyr()
 
   if ! $xephyr_running; then
     # Optional: additionally check for stale X socket if you like:
-    #   [ -S "/tmp/.X11-unix/X${CODEX_DISPLAY#:}" ] && rm -f "/tmp/.X11-unix/X${CODEX_DISPLAY#:}"
+    #   [ -S "/tmp/.X11-unix/X${AICLI_DISPLAY#:}" ] && rm -f "/tmp/.X11-unix/X${AICLI_DISPLAY#:}"
 
-    Xephyr "$CODEX_DISPLAY" -screen 1280x800 -br -nolisten tcp -auth "$HOST_XAUTHORITY" 2>/dev/null &
+    Xephyr "$AICLI_DISPLAY" -screen 1280x800 -br -nolisten tcp -auth "$HOST_XAUTHORITY" 2>/dev/null &
     sleep 1
-    DISPLAY="$CODEX_DISPLAY" XAUTHORITY="$HOST_XAUTHORITY" fluxbox &
+    DISPLAY="$AICLI_DISPLAY" XAUTHORITY="$HOST_XAUTHORITY" fluxbox &
     xephyr_pid=$!
     printf '%s\n' "$xephyr_pid" >"$XEPHYR_PIDFILE"
     printf '1\n' >"$XEPHYR_COUNTFILE"
@@ -194,7 +194,7 @@ function filenameify()
 
 function start_sockettapd()
 {
-  local codex_mode="$1"
+  local aicli_mode="$1"
   local name="$2"
 
   rm -f "$WORKSPACE_ROOT/sockettapd-$2.log"
@@ -259,28 +259,24 @@ add_ro () {  # Usage: add_ro SRC DST
   printf '%s\0' "${@:2}"
 }
 
-# Determine which command to run.
-del_path $HOME/bin      # Do not run the codex script (again).
-CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$WORKSPACE_ROOT'%'$HOME_CODEX'/workspace%')"
-echo "CODEX_COMMAND = $CODEX_COMMAND"
-# This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting codex.
-COMMAND="$HOME_CODEX/.local/bin/start_codex"
+# This command is run inside the container. It first generates ~/.codex/AGENTS.md before starting the CLI.
+COMMAND="$HOME_AICLI/.local/bin/start_ai_cli"
 
-# Determine CODEX_MODE and SESSION_ID.
-CODEX_MODE=unknown
+# Determine AICLI_MODE and SESSION_ID.
+AICLI_MODE=unknown
 SESSION_ID=
 
 if [ "$#" -eq 1 ] && [[ $1 == "shell" ]]; then
-  # Run a bash shell with CODEX_MODE=shell.
+  # Run a bash shell with AICLI_MODE=shell.
   COMMAND="bash"
-  CODEX_MODE="shell"
+  AICLI_MODE="shell"
 elif [ "$#" -ge 1 ] && [[ $1 == "bash" ]]; then
   # Run a command through bash inside the container.
   COMMAND="bash"
-  CODEX_MODE="bash"
+  AICLI_MODE="bash"
   shift
 else
-  # Process command line arguments and put them in `SESSION_ID` and/or `CODEX_MODE` respectively.
+  # Process command line arguments and put them in `SESSION_ID` and/or `AICLI_MODE` respectively.
   while (($#)); do
     case "$1" in
       -s|resume)
@@ -292,25 +288,25 @@ else
         shift 2
         ;;
       *)
-        CODEX_MODE="$1"
+        AICLI_MODE="$1"
         shift
         ;;
     esac
   done
-  # Try to deduce CODEX_MODE from SESSION_ID if the former wasn't specified on the command line.
-  if [[ $CODEX_MODE == "unknown" && -n "$SESSION_ID" ]]; then
+  # Try to deduce AICLI_MODE from SESSION_ID if the former wasn't specified on the command line.
+  if [[ $AICLI_MODE == "unknown" && -n "$SESSION_ID" ]]; then
     local thread_id_dir="$PLANROOT/ThreadID/$SESSION_ID"
     if [[ -r "$thread_id_dir/mode" ]]; then
       # Figure out the mode.
-      CODEX_MODE=$(<"$thread_id_dir/mode")
+      AICLI_MODE=$(<"$thread_id_dir/mode")
     else
       echo -e "\e[31mWARNING: $thread_id_dir DOES NOT EXIST!\e[0m"
       sleep 2
     fi
   fi
-  # Try to deduce SESSION_ID from CODEX_MODE if the former wasn't specified on the command line.
-  if [[ -z "$SESSION_ID" && -z ${CODEX_RUN_NEW_SESSION:-} && -L "$PLANROOT/$CODEX_MODE/id" ]]; then
-    SESSION_ID=$(basename "$(readlink "$PLANROOT/$CODEX_MODE/id")")
+  # Try to deduce SESSION_ID from AICLI_MODE if the former wasn't specified on the command line.
+  if [[ -z "$SESSION_ID" && -z ${AICLI_RUN_NEW_SESSION:-} && -L "$PLANROOT/$AICLI_MODE/id" ]]; then
+    SESSION_ID=$(basename "$(readlink "$PLANROOT/$AICLI_MODE/id")")
   fi
 fi
 
@@ -318,7 +314,7 @@ fi
 setup_aap
 PLANBASE="$(basename "$PLANROOT")"
 
-if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   echo "Running opencode..."
   # Construct command_args.
   if [[ $REPOBASE == "opencode" ]]; then
@@ -335,17 +331,22 @@ if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
   fi
 else
   # Construct roots_json.
-  if [[ $CODEX_MODE == "planner" ]]; then
-    roots_json='["'$HOME_CODEX'/workspace/'$PLANBASE'"'
-  elif [[ $CODEX_MODE == "coder" ]]; then
-    roots_json='["'$HOME_CODEX'/workspace"'
+  if [[ $AICLI_MODE == "planner" ]]; then
+    roots_json='["'$HOME_AICLI'/workspace/'$PLANBASE'"'
+  elif [[ $AICLI_MODE == "coder" ]]; then
+    roots_json='["'$HOME_AICLI'/workspace"'
   fi
   # Note: this won't work if GITACHE_ROOT, CCACHE_DIR or HOME contain spaces or quotes.
-  # Also note that $HOME/.ssh will be mapped onto $HOME_CODEX/.ssh -- it isn't the real HOME.
-  for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${CODEX_EXTRA_WRITABLE_ROOTS[@]}"; do
+  # Also note that $HOME/.ssh will be mapped onto $HOME_AICLI/.ssh -- it isn't the real HOME.
+  for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${AICLI_EXTRA_WRITABLE_ROOTS[@]}"; do
     roots_json+=",\"$p\""
   done
   roots_json+="]"
+
+  # Determine which command to run.
+  del_path $HOME/bin      # Do not run the codex script (again), if that exists.
+  CODEX_COMMAND="$(/usr/bin/which codex | sed -e 's%'$WORKSPACE_ROOT'%'$HOME_AICLI'/workspace%')"
+  echo "CODEX_COMMAND = $CODEX_COMMAND"
 
   # Construct command_args.
   command_args=(
@@ -358,23 +359,23 @@ else
     "--config" "sandbox_workspace_write.writable_roots=${roots_json}"
   )
 fi
-if [[ $CODEX_MODE == "shell" ]]; then
+if [[ $AICLI_MODE == "shell" ]]; then
   command_args=("-l")
-elif [[ $CODEX_MODE == "bash" ]]; then
+elif [[ $AICLI_MODE == "bash" ]]; then
   command_args=("-lc" "$(quote_shell_words "$@")")
 elif [[ -n "$SESSION_ID" ]]; then
-  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+  if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
     command_args+=(-s "$SESSION_ID")
-    if [[ $CODEX_MODE != "unknown" ]]; then
-      command_args+=(--agent "$CODEX_MODE")
+    if [[ $AICLI_MODE != "unknown" ]]; then
+      command_args+=(--agent "$AICLI_MODE")
     fi
   else
     command_args+=(resume "$SESSION_ID")
   fi
 else
-  if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
-    if [[ $CODEX_MODE != "unknown" ]]; then
-      command_args+=(--agent "$CODEX_MODE")
+  if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+    if [[ $AICLI_MODE != "unknown" ]]; then
+      command_args+=(--agent "$AICLI_MODE")
     fi
   fi
 fi
@@ -396,39 +397,39 @@ mapfile -d '' -t ETC_FILES < <(
 )
 
 # Recreate the /usr/src/linux symlink in case the kernel version changed since the last run.
-sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_CODEX/.bwrap-masks/usr_src_linux/linux"
+sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src_linux/linux"
 
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   AGENT="opencode"
 else
   AGENT="codex"
 fi
-echo -e "Running $AGENT in \e[31m\"$CODEX_MODE\" mode\e[0m."
+echo -e "Running $AGENT in \e[31m\"$AICLI_MODE\" mode\e[0m."
 
-if [[ $CODEX_MODE != "bash" && $CODEX_MODE != "shell" ]]; then
+if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   # Start the sockettapd.
   killall sockettapd || true
-  start_sockettapd "$CODEX_MODE" "$(filenameify "$REPOBASE")"
+  start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
   # Make the agent listen on the correct socket.
-  if [[ -z "$CODEX_RUN_OPENCODE" ]]; then
-    command_args+=(--config exec_socket_path="$HOME_CODEX/workspace/$PLANBASE/$CODEX_MODE.sock")
+  if [[ -z "$AICLI_RUN_OPENCODE" ]]; then
+    command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
   fi
   # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `session_id.js` instead.
-  #command_args+=(--exec-socket-path "$HOME_CODEX/workspace/$PLANBASE/$CODEX_MODE.sock")
+  #command_args+=(--exec-socket-path "$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
 fi
 
 # Switch home directories.
 HOME_USER="$HOME"
-HOME="$HOME_CODEX"
+HOME="$HOME_AICLI"
 
-# Set up cdeh; this must be the same as what is used in $HOME_CODEX/.bash_profile
-CODEX_CDEH_ROOT=$HOME/cdeh
+# Set up cdeh; this must be the same as what is used in $HOME_AICLI/.bash_profile
+AICLI_CDEH_ROOT=$HOME/cdeh
 # In case it changed.
-cp $CDEH_ROOT/env.bashrc $CODEX_CDEH_ROOT
-cp $CDEH_ROOT/do_prompt $CODEX_CDEH_ROOT
+cp $CDEH_ROOT/env.bashrc $AICLI_CDEH_ROOT
+cp $CDEH_ROOT/do_prompt $AICLI_CDEH_ROOT
 
 mode_of ()
 {
@@ -467,89 +468,89 @@ bwrap_args=(
   --ro-bind /lib /lib
   --ro-bind-try /lib64 /lib64
   # Mount an empty /etc with just a resolv.conf and profile.
-  --bind "$HOME_CODEX/.bwrap-masks/etc" /etc                    # We need to use --bind for the next line to work, then remount it ro.
+  --bind "$HOME_AICLI/.bwrap-masks/etc" /etc                    # We need to use --bind for the next line to work, then remount it ro.
   # Add remaining /etc files to it.
   "${ETC_FILES[@]}"
   --remount-ro /etc
   $(create_dirs /run/remountd) --bind /run/remountd /run/remountd
   --bind /run/netns /run/netns
   # Mount an empty /usr/src with a linux symlink.
-  --bind "$HOME_CODEX/.bwrap-masks/usr_src_linux" /usr/src      # We need to use --bind for the next line to work, then remount it to.
+  --bind "$HOME_AICLI/.bwrap-masks/usr_src_linux" /usr/src      # We need to use --bind for the next line to work, then remount it to.
   # Add a nvim plugin to that that we're symlinking.
   $(create_dirs /usr/src/pathogen/vim-pathogen/autoload/pathogen.vim /usr/src)
   --ro-bind "/usr/src/pathogen/vim-pathogen/autoload/pathogen.vim" "/usr/src/pathogen/vim-pathogen/autoload/pathogen.vim"
   --remount-ro /usr/src
-  # Mount the home directory; Codex should never write here, therefore it is remounted ro below.
-  $(create_dirs "$HOME_CODEX") --bind "$HOME_CODEX" "$HOME_CODEX"
+  # Mount the home directory; the CLI should never write here, therefore it is remounted ro below.
+  $(create_dirs "$HOME_AICLI") --bind "$HOME_AICLI" "$HOME_AICLI"
   # ssh doesn't use HOME, so we have to add HOME_USER to the container. We need mode 755 because it will be owned by root inside the container.
   --perms 755 --dir "$HOME_USER"
   # Use --bind so we can add to /home/carlo/.ssh/known_hosts from the shell. Other files are owned by root.
-  $(create_dirs "$HOME_USER/.ssh") --bind "$HOME_CODEX/.ssh" "$HOME_USER/.ssh"
+  $(create_dirs "$HOME_USER/.ssh") --bind "$HOME_AICLI/.ssh" "$HOME_USER/.ssh"
   # Add individual directories from our home directory.
-  $(create_dirs "$HOME_CODEX/.config/nvim" "$HOME_CODEX") --ro-bind "$HOME_USER/.config/nvim" "$HOME_CODEX/.config/nvim"
+  $(create_dirs "$HOME_AICLI/.config/nvim" "$HOME_AICLI") --ro-bind "$HOME_USER/.config/nvim" "$HOME_AICLI/.config/nvim"
   $(create_dirs "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER")
   --ro-bind "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER/projects/github/neovim-true-color-scheme-editor"
-  --ro-bind "$HOST_XAUTHORITY" "$CODEX_XAUTHORITY"
+  --ro-bind "$HOST_XAUTHORITY" "$AICLI_XAUTHORITY"
   # Only really needed for the Codex CLI, but well.
-  --bind "$HOME_USER/.codex" "$HOME_CODEX/.codex"
+  --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   # Mount the whole workspace as read-only.
-  #FIXME --ro-bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
-  --bind "$WORKSPACE_ROOT" "$HOME_CODEX/workspace"
+  #FIXME --ro-bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
+  --bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
   # Use a file that resides in this project as .bash_profile in the container.
-  --ro-bind "$HOME_USER/projects/github/ai-cli/codex-bwrap/dot-bash_profile" "$HOME_CODEX/.bash_profile"
-  # Remount $HOME_CODEX read-only, now that all bind mounts have been added to it.
-  --remount-ro "$HOME_CODEX"
-  # Codex needs write access to the gitache root.
+  --ro-bind "$HOME_USER/projects/github/ai-cli/ai-cli-bwrap/dot-bash_profile" "$HOME_AICLI/.bash_profile"
+  # Remount $HOME_AICLI read-only, now that all bind mounts have been added to it.
+  --remount-ro "$HOME_AICLI"
+  # The CLI needs write access to the gitache root.
   --bind "$GITACHE_ROOT" "$GITACHE_ROOT"
   --perms $(mode_of /tmp) --tmpfs "$CCACHE_DIR"
 )
 
-if [[ -n "$CODEX_RUN_OPENCODE" ]]; then
+if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
     # where the global AGENTS.md is being generated.
-    --bind "$CODEX_XDG_ROOT" "$HOME_CODEX/workspace/.xdg"
+    --bind "$AICLI_XDG_ROOT" "$HOME_AICLI/workspace/.xdg"
   )
 fi
 
-if [[ $CODEX_MODE == "analyst" || $CODEX_MODE == "planner" ]]; then
-  if [[ $CODEX_MODE == "planner" ]]; then
+if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
+  if [[ $AICLI_MODE == "planner" ]]; then
     bwrap_args+=(
       # Mount the PLANROOT read-write.
-      --bind "$WORKSPACE_ROOT/$PLANBASE" "$HOME_CODEX/workspace/$PLANBASE"
+      --bind "$WORKSPACE_ROOT/$PLANBASE" "$HOME_AICLI/workspace/$PLANBASE"
     )
   fi
   bwrap_args+=(
     # Change directory to the PLANROOT repository.
-    --chdir "$HOME_CODEX/workspace/$PLANBASE"
+    --chdir "$HOME_AICLI/workspace/$PLANBASE"
   )
 else
-  CLEAN_CWD=$(realpath --no-symlinks "$HOME_CODEX/workspace/$REPOBASE/$CODEX_DIRECTORY")
+  CLEAN_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
   bwrap_args+=(
     # Mount the REPOROOT read-write.
-    --bind "$WORKSPACE_ROOT/$REPOBASE" "$HOME_CODEX/workspace/$REPOBASE"
+    --bind "$WORKSPACE_ROOT/$REPOBASE" "$HOME_AICLI/workspace/$REPOBASE"
     # Change directory to the REPOROOT repository.
     --chdir "$CLEAN_CWD"
   )
 fi
 
-export HOME REPOBASE CODEX_MODE CODEX_RUN_OPENCODE
+export HOME REPOBASE AICLI_MODE AICLI_RUN_OPENCODE
 
 echo "HOME=\"$HOME\""
 echo "REPOBASE=\"$REPOBASE\""
-echo "CODEX_MODE=\"$CODEX_MODE\""
-echo "CODEX_RUN_OPENCODE=\"$CODEX_RUN_OPENCODE\""
+echo "AICLI_MODE=\"$AICLI_MODE\""
+echo "AICLI_RUN_OPENCODE=\"$AICLI_RUN_OPENCODE\""
 
 echo "Starting bwrap, command:"
-echo "sudo --preserve-env=HOME,REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \\"
+echo "sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE \\"
 echo "  ip netns exec nscodex \\"
 echo "    bwrap $(quote_args "${bwrap_args[@]}") \\"
 echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
-sudo --preserve-env=HOME,REPOBASE,CODEX_MODE,CODEX_RUN_OPENCODE \
+sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE \
   ip netns exec nscodex \
     bwrap "${bwrap_args[@]}" \
       -- \
