@@ -2,7 +2,7 @@
 # Use the alias `ai_cli` to use it.
 
 # Run sockettapd from its project directory.
-pre_path "/home/carlo/projects/aicxx/codex-sockettapd/build/src"
+pre_path "/home/carlo/projects/github/ai-cli/ai-cli-sockettapd/build/src"
 
 # Sanity checks.
 if [ -z "$WORKSPACE_ROOT" ]; then
