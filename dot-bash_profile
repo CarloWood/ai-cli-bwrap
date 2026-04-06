@@ -51,6 +51,9 @@ else
   unalias ssh 2>/dev/null
 fi
 
+# Load aap-* functions.
+source $PLANROOT/agents-common/bash/aap.bash
+
 # Store this as the base environment.
 __cdeh_store_environment
 
