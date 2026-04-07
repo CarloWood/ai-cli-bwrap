@@ -62,11 +62,21 @@ PLANROOT=/home/carlo/projects/github/ai-cli/opencode/opencode-AAP
 
 # cdeh environment
 
-I can't list every environment file I typically use, but here are the two files
+## The environment files in this repository
+
+* [`env.source`](env.source) : environment file for the "project" `ai-cli-bwrap` itself.
+* [`env.projects`](env.projects) : environment file linked to from `~/projects/env.source`; the environment of *all* projects on my PC.
+* [`env.ai-cli`](env.ai-cli) : the `ai-cli` environment for the host, sourced by `env.projects` if the current environment is the host environment. Allows the user to start `opencode`.
+* [`ai-cli.run`](ai-cli.run) : sourced by the `ai_cli` function defined in `env.ai-cli`. Does all the hard work required to start the requested AI CLI.
+* [`dot-bash_profile`](dot-bash_profile) : file bind-mounted at `~/.bash_profile` in the bwrap container.
+
+## Use case
+
+I can't list every environment file I typically use, but here are the two files,
 that I directly sourced when working on the ai-cli-bwrap project, in order to
 help you if you want to make a chance to understand what is going on:
 
-For the `~/projects/github/ai-cli/ai-cli-bwrap` project, the environment files are: (pe = print environment):
+For the `~/projects/github/ai-cli/ai-cli-bwrap` project, the environment files are: (pe = print environment (files)):
 ```
 daniel:~/projects/github/ai-cli/ai-cli-bwrap>pe
 /home/carlo/projects/github/ai-cli/ai-cli-bwrap/env.source
