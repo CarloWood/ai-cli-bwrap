@@ -199,6 +199,11 @@ function start_sockettapd()
 
   rm -f "$WORKSPACE_ROOT/sockettapd-$2.log"
 
+  if [[ ! -r $LIBCWD_RCFILE_OVERRIDE_NAME ]]; then
+    echo "LIBCWD_RCFILE_OVERRIDE_NAME is set to a non-existent or unreadable file ($LIBCWD_RCFILE_OVERRIDE_NAME)."
+    exit 1
+  fi
+
   echo "Running: "\
  "sockettapd --planroot \"$PLANROOT\" --log \"$WORKSPACE_ROOT/sockettapd-$name.log\" --socket \"$name\""
   sockettapd --planroot "$PLANROOT"   --log "$WORKSPACE_ROOT/sockettapd-$name.log"   --socket "$name"
@@ -330,6 +335,7 @@ if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
     )
   fi
 else
+  echo "Running codex..."
   # Construct roots_json.
   if [[ $AICLI_MODE == "planner" ]]; then
     roots_json='["'$HOME_AICLI'/workspace/'$PLANBASE'"'
@@ -494,8 +500,10 @@ bwrap_args=(
   # Only really needed for the Codex CLI, but well.
   --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   # Mount the whole workspace as read-only.
-  #FIXME --ro-bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
-  --bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
+  --ro-bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
+  # Mount the PLANROOT and REPOROOT separately, so we can remount them using remountd.
+  --bind "$WORKSPACE_ROOT/$PLANBASE" "$HOME_AICLI/workspace/$PLANBASE"
+  --bind "$WORKSPACE_ROOT/$REPOBASE" "$HOME_AICLI/workspace/$REPOBASE"
   # Use a file that resides in this project as .bash_profile in the container.
   --ro-bind "$HOME_USER/projects/github/ai-cli/ai-cli-bwrap/dot-bash_profile" "$HOME_AICLI/.bash_profile"
   # Remount $HOME_AICLI read-only, now that all bind mounts have been added to it.
@@ -504,6 +512,18 @@ bwrap_args=(
   --bind "$GITACHE_ROOT" "$GITACHE_ROOT"
   --perms $(mode_of /tmp) --tmpfs "$CCACHE_DIR"
 )
+
+if [[ -n "$BUILDDIR" && -d "$BUILDDIR" ]]; then
+  if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
+     AICLI_BUILDDIR=$(echo "$BUILDDIR" | sed -e 's%'$WORKSPACE_ROOT'%'$HOME_AICLI'/workspace%')
+     bwrap_args+=(
+       # Always mount the BUILDDIR read-write.
+       --bind "$BUILDDIR" "$AICLI_BUILDDIR"
+     )
+   else
+     echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
+   fi
+fi
 
 if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   bwrap_args+=(
@@ -514,13 +534,20 @@ if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   )
 fi
 
+if [[ $AICLI_MODE != "coder" ]]; then
+  bwrap_args+=(
+    # Mount the REPOROOT read-only.
+    --remount-ro "$HOME_AICLI/workspace/$REPOBASE"
+  )
+fi
+if [[ $AICLI_MODE != "planner" ]]; then
+  bwrap_args+=(
+    # Mount the PLANROOT read-only.
+    --remount-ro "$HOME_AICLI/workspace/$PLANBASE"
+  )
+fi
+
 if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
-  if [[ $AICLI_MODE == "planner" ]]; then
-    bwrap_args+=(
-      # Mount the PLANROOT read-write.
-      --bind "$WORKSPACE_ROOT/$PLANBASE" "$HOME_AICLI/workspace/$PLANBASE"
-    )
-  fi
   bwrap_args+=(
     # Change directory to the PLANROOT repository.
     --chdir "$HOME_AICLI/workspace/$PLANBASE"
@@ -528,8 +555,6 @@ if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
 else
   CLEAN_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
   bwrap_args+=(
-    # Mount the REPOROOT read-write.
-    --bind "$WORKSPACE_ROOT/$REPOBASE" "$HOME_AICLI/workspace/$REPOBASE"
     # Change directory to the REPOROOT repository.
     --chdir "$CLEAN_CWD"
   )
