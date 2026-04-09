@@ -1,10 +1,10 @@
 import { createConnection } from "node:net";
-import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 /**
- * opencode plugin: publish the session ID, agent name and working directory to sockettapd.
+ * opencode plugin: publish session metadata to sockettapd and mirror the
+ * active agent into `AICLI_MODE` for future child shells.
  *
  * Goal:
  * - Wait until opencode has created a real `ses_*` session ID for the current chat.
@@ -12,11 +12,14 @@ import { setTimeout as sleep } from "node:timers/promises";
  * - Connect to that socket and send the same payload shape used by the
  *   `SocketTap.session()` implementation on this branch.
  * - Send the notification every time session ID or agent name change.
+ * - Keep `AICLI_MODE` in sync with the active agent for commands started after
+ *   the change.
  *
  * Why this exists:
  * The session ID is not known when opencode first starts. It only becomes
  * available once opencode has created the first chat message for a session.
- * This plugin hooks into that moment and performs the external notification.
+ * This plugin hooks into that moment, performs the external notification, and
+ * updates the shell environment presented to future child processes.
  */
 const waits = [0, 50, 150, 500];
 
@@ -29,7 +32,7 @@ const waits = [0, 50, 150, 500];
 let lastSentKey;
 
 function pairKey(sessionID, agentName) {
-  return `${sessionID}\0${agentName ?? ""}`;
+  return `${sessionID}\0${agentName}`;
 }
 
 /**
@@ -121,7 +124,7 @@ async function write(file, body) {
  * Local helper.
  *
  * Intended effect:
- * Write the Session ID, agent name, and current working directory to
+ * Write the session ID, agent name, and current working directory to
  * sockettapd.
  *
  * This mirrors the retry behavior from the in-repo `SocketTap.session()`
@@ -151,12 +154,26 @@ async function notify(sessionID, agentName, cwd) {
  *
  * Intended effect:
  * Capture the process working directory for this opencode instance and register
- * a hook that will report the first real session ID as soon as opencode has one.
+ * hooks that report the first real session ID as soon as opencode has one and
+ * expose the current agent as `AICLI_MODE` to future child shells.
  */
 export const SessionIdPlugin = async (input) => {
   const cwd = path.resolve(input.directory);
 
   return {
+    /**
+     * Plugin API hook.
+     *
+     * This function is called by opencode before spawning a shell-backed tool
+     * or terminal session.
+     *
+     * Intended effect:
+     * Set `AICLI_MODE` for new child processes to the currently active agent.
+     */
+    "shell.env": async (ctx, output) => {
+      output.env.AICLI_MODE = ctx.agent;
+    },
+
     /**
      * Plugin API hook.
      *
