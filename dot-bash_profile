@@ -20,7 +20,8 @@ export WORKSPACE_ROOT=$HOME/workspace
 # Default top project for compiling libraries.
 export TOPPROJECT=$WORKSPACE_ROOT
 # The current project.
-export REPOROOT=$WORKSPACE_ROOT/$REPOBASE
+export REPOROOT="$WORKSPACE_ROOT/$REPOBASE"
+export PLANROOT="$WORKSPACE_ROOT/$REPOBASE-AAP"
 # Set a CLI environment specific PATH.
 export PATH="$HOME/.local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
 # Set a CLI environment specific xdg cache directory.
