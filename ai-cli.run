@@ -39,6 +39,9 @@ if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
   exit 1
 fi
 
+# Detect using undefined variables.
+set -u
+
 # This is the directory that is bind mounted in the container as ~/workspace/.xdg.
 AICLI_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
 echo "AICLI_XDG_ROOT=\"$AICLI_XDG_ROOT\""
@@ -319,15 +322,26 @@ fi
 setup_aap
 PLANBASE="$(basename "$PLANROOT")"
 
+# Determine the working directory where the CLI should start (as container path).
+if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
+  AICLI_CWD="$HOME_AICLI/workspace/$PLANBASE"
+else
+  AICLI_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
+fi
+
 if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   echo "Running opencode..."
   # Construct command_args.
   if [[ $REPOBASE == "opencode" ]]; then
+    # `bun run dev` must always be run from the REPOROOT of opencode.
     command_args=(
       "/usr/bin/bun"
       "run"
+      "--cwd"
+      "$HOME_AICLI/workspace/$REPOBASE"
       "dev"
       "--"
+      "$AICLI_CWD"
     )
   else
     command_args=(
@@ -511,14 +525,21 @@ bwrap_args=(
   # The CLI needs write access to the gitache root.
   --bind "$GITACHE_ROOT" "$GITACHE_ROOT"
   --perms $(mode_of /tmp) --tmpfs "$CCACHE_DIR"
+  # Change to the desired working directory before starting the CLI.
+  --chdir "$AICLI_CWD"
 )
 
-if [[ -n "$BUILDDIR" && -d "$BUILDDIR" ]]; then
+echo "BUILDDIR=${BUILDDIR-<undefined>}"
+if [[ -n "${BUILDDIR:-}" && -d "$BUILDDIR" ]]; then
   if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
-     AICLI_BUILDDIR=$(echo "$BUILDDIR" | sed -e 's%'$WORKSPACE_ROOT'%'$HOME_AICLI'/workspace%')
+     BUILDDIR_BASE="$(realpath -s --relative-to="$WORKSPACE_ROOT" "$BUILDDIR")"
+     # The build directory for the AI on the host (so it is cached over opencode restarts).
+     HOST_BUILDDIR="$HOME_AICLI/.cache/ai-cli/build"
+     mkdir -p "$HOST_BUILDDIR"
      bwrap_args+=(
-       # Always mount the BUILDDIR read-write.
-       --bind "$BUILDDIR" "$AICLI_BUILDDIR"
+       # Always mount the BUILDDIR for the AI read-write at $WORKSPACE_ROOT/${BUILDDIR_BASE}.
+       # See `BUILDDIR="$WORKSPACE_ROOT/${BUILDDIR_BASE}"` in env.projects.
+       --bind "$HOST_BUILDDIR" "${HOME_AICLI}/workspace/${BUILDDIR_BASE}"
      )
    else
      echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
@@ -544,19 +565,6 @@ if [[ $AICLI_MODE != "planner" ]]; then
   bwrap_args+=(
     # Mount the PLANROOT read-only.
     --remount-ro "$HOME_AICLI/workspace/$PLANBASE"
-  )
-fi
-
-if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
-  bwrap_args+=(
-    # Change directory to the PLANROOT repository.
-    --chdir "$HOME_AICLI/workspace/$PLANBASE"
-  )
-else
-  CLEAN_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
-  bwrap_args+=(
-    # Change directory to the REPOROOT repository.
-    --chdir "$CLEAN_CWD"
   )
 fi
 
