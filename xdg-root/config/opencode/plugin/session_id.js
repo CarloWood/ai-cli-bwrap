@@ -24,18 +24,6 @@ import { setTimeout as sleep } from "node:timers/promises";
 const waits = [0, 50, 150, 500];
 
 /**
- * Local guard that tracks the last session/agent pair reported.
- *
- * The plugin should notify sockettapd whenever the active session changes, the
- * active agent changes, or both.
- */
-let lastSentKey;
-
-function pairKey(sessionID, agentName) {
-  return `${sessionID}\0${agentName}`;
-}
-
-/**
  * Local helper.
  *
  * Intended effect:
@@ -146,6 +134,38 @@ async function notify(sessionID, agentName, cwd) {
 }
 
 /**
+ * Local guards that tracks the last session/agent/cwd triplet reported.
+ *
+ * The plugin should notify sockettapd whenever the active session, active agent,
+ * or current working directory changes.
+ */
+let lastSessionID;
+let lastAgentName;
+let lastCwd;
+
+/**
+ * Local helper.
+ *
+ * Intended effect:
+ * Notify sockettapd exactly once for each session/agent/cwd triplet and suppress
+ * repeated notifications until either value changes.
+ */
+async function notifyIfChanged(sessionID, agentName, cwd) {
+  if (lastAgentName !== agentName) {
+    // Can we switch repository root and current working directory here?
+  }
+
+  if (lastSessionID !== sessionID || lastAgentName !== agentName || lastCwd !== cwd) {
+    const ok = await notify(sessionID, agentName, cwd);
+    if (!ok) return;
+  }
+
+  lastSessionID = sessionID;
+  lastAgentName = agentName;
+  lastCwd = cwd;
+}
+
+/**
  * Plugin API entry point.
  *
  * This function is called by opencode when the plugin is loaded. It receives the
@@ -168,9 +188,12 @@ export const SessionIdPlugin = async (input) => {
      * or terminal session.
      *
      * Intended effect:
-     * Set `AICLI_MODE` for new child processes to the currently active agent.
+     * Set `AICLI_MODE` for new child processes to the currently active agent
+     * and notify sockettapd if the session/agent pair changed since the last
+     * notification.
      */
     "shell.env": async (ctx, output) => {
+      await notifyIfChanged(ctx.sessionID, ctx.agent, cwd);
       output.env.AICLI_MODE = ctx.agent;
     },
 
@@ -182,15 +205,10 @@ export const SessionIdPlugin = async (input) => {
      * available.
      *
      * Intended effect:
-     * Notify sockettapd whenever the current session/agent pair changes, then
-     * suppress repeated notifications until that pair changes again.
+     * Notify sockettapd whenever the current session/agent pair changes.
      */
     "chat.message": async (ctx) => {
-      const key = pairKey(ctx.sessionID, ctx.agent);
-      if (lastSentKey === key) return;
-      const ok = await notify(ctx.sessionID, ctx.agent, cwd);
-      if (!ok) return;
-      lastSentKey = key;
+      await notifyIfChanged(ctx.sessionID, ctx.agent, cwd);
     },
   };
 };
