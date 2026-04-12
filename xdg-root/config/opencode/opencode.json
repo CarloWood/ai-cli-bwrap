@@ -130,9 +130,6 @@
     "read": {
       "*": "allow"
     },
-    "edit": {
-      "*": "deny"
-    },
     "external_directory": {
       "{env:GITACHE_ROOT}/**": "deny"
     }
@@ -155,6 +152,9 @@
       "permission": {
         "bash": {
           "aap-analyst-list": "allow"
+        },
+        "edit": {
+          "*": "deny"
         }
       }
     },
@@ -168,7 +168,7 @@
           "aap-*": "allow"
         },
         "edit": {
-          "{env:PLANROOT}/**": "allow"
+          "*": "allow"
         }
       }
     },
@@ -199,7 +199,7 @@
           "node *": "allow"
         },
         "edit": {
-          "{env:REPOROOT}/**": "allow"
+          "*": "allow"
         }
       }
     }
