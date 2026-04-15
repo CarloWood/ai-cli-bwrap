@@ -17,7 +17,8 @@
       "bsdcpio": "allow",
       "bsdtar": "allow",
       "bsdunzip": "allow",
-      "bun": "allow",
+      "bun run typecheck": "allow",
+      "bun run --cwd * typecheck": "allow",
       "busctl": "allow",
       "bzcat": "allow",
       "bzdiff": "allow",
@@ -145,7 +146,7 @@
       "disable": true
     },
     "analyst": {
-      "description": "Pre-planning agent that can read REPOROOT, do web searches.",
+      "description": "Pre-planning agent that can read PLANROOT and REPOROOT, do web searches.",
       "mode": "primary",
       "prompt": "{file:./prompts/analyst.txt}",
       "color": "#4040ff",
