@@ -194,7 +194,8 @@ export const SessionIdPlugin = async (input) => {
      */
     "shell.env": async (ctx, output) => {
       // `ctx.agent` is only present when opencode includes the CW07-directory-as-function-of-agent branch.
-      if (!ctx.agent) return;
+      // Some invocations don't pass sessionID or agent; we should ignore those.
+      if (!ctx.sessionID || !ctx.agent) return;
 
       await notifyIfChanged(ctx.sessionID, ctx.agent, cwd);
       output.env.AICLI_MODE = ctx.agent;
