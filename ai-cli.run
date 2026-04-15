@@ -293,6 +293,7 @@ else
           return 1
         fi
         SESSION_ID="$2"
+        export OPENCODE_DEBUG_SESSION="$2"
         shift 2
         ;;
       *)
@@ -583,7 +584,7 @@ echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
-sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE \
+sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_DEBUG_SESSION \
   ip netns exec nscodex \
     bwrap "${bwrap_args[@]}" \
       -- \
