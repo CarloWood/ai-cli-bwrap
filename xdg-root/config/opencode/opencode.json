@@ -129,9 +129,16 @@
       "zcat *": "allow"
     },
     "read": {
-      "*": "allow"
+      "**": "allow",
+      "{env:WORKSPACE_ROOT}/**": "allow",
+      "{env:WORKSPACE_ROOT}/.xdg/**": "allow"
+    },
+    "edit": {
+      "*": "deny"
     },
     "external_directory": {
+      "{env:WORKSPACE_ROOT}/**": "allow",
+      "{env:WORKSPACE_ROOT}/.xdg/**": "allow",
       "{env:GITACHE_ROOT}/**": "deny"
     }
   },
@@ -153,9 +160,6 @@
       "permission": {
         "bash": {
           "aap-analyst-list": "allow"
-        },
-        "edit": {
-          "*": "deny"
         }
       }
     },
@@ -169,7 +173,7 @@
           "aap-*": "allow"
         },
         "edit": {
-          "*": "allow"
+          "**/*": "allow"
         }
       }
     },
@@ -200,7 +204,7 @@
           "node *": "allow"
         },
         "edit": {
-          "*": "allow"
+          "**/*": "allow"
         }
       }
     }
