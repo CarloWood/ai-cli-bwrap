@@ -25,7 +25,7 @@ const dir = path.join(
   process.env.XDG_STATE_HOME ?? path.join(os.homedir(), ".local", "state"),
   "opencode",
 );
-const file = path.join(dir, "model-input.jsonl");
+const model_input_file = path.join(dir, "model-input.jsonl");
 const promptDir = path.join(
   process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config"),
   "opencode",
@@ -125,9 +125,9 @@ function scrub(value, seen = new WeakSet(), depth = 0) {
  *
  * Write the accumulated model input snapshot to disk as a pretty printed json file.
  */
-async function flush() {
+async function write_model_input_file() {
   await mkdir(dir, { recursive: true });
-  await writeFile(file, JSON.stringify(scrub(last), null, 2) + "\n");
+  await writeFile(model_input_file, JSON.stringify(scrub(last), null, 2) + "\n");
 }
 
 /**
@@ -139,7 +139,7 @@ async function flush() {
  * - `reset`: start a fresh snapshot instead of merging into the previous one
  * - `flush`: immediately write the resulting snapshot to disk
  */
-async function write(data, options = {}) {
+async function append_last(data, options = {}) {
   last = options.reset
     ? data
     : {
@@ -148,7 +148,7 @@ async function write(data, options = {}) {
       };
   last.time = new Date().toISOString();
   if (options.flush) {
-    await flush();
+    await write_model_input_file();
   }
 }
 
@@ -193,7 +193,7 @@ export const PromptOverridesPlugin = async () => {
      */
     "experimental.chat.messages.transform": async (_input, output) => {
       const meta = session(output.messages);
-      await write(
+      await append_last(
         {
           kind: "snapshot",
           ...meta,
@@ -221,7 +221,7 @@ export const PromptOverridesPlugin = async () => {
         output.system.length = 0;
         output.system.push(text);
       }
-      await write(
+      await append_last(
         {
           kind: "snapshot",
           sessionID: input.sessionID,
@@ -256,7 +256,7 @@ export const PromptOverridesPlugin = async () => {
       ) {
         output.options.instructions = text;
       }
-      await write({
+      await append_last({
         kind: "snapshot",
         sessionID: input.sessionID,
         messageID: input.message?.id,
@@ -278,7 +278,7 @@ export const PromptOverridesPlugin = async () => {
      * whole snapshot once to `model-input.jsonl`.
      */
     "chat.headers": async (input, output) => {
-      await write(
+      await append_last(
         {
           kind: "snapshot",
           sessionID: input.sessionID,

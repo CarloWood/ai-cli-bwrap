@@ -1,0 +1,54 @@
+#!/bin/bash -l
+
+echo "Running: start_ai_cli $@"
+echo "REPOROOT=\"$REPOROOT\", PLANROOT=\"$PLANROOT\", BUILDDIR=\"$BUILDDIR\""
+
+if [[ -z "$AICLI_INSIDE_ENVIRONMENT" ]]; then
+  echo "start_ai_cli: ERROR: must be run inside netns nscodex."
+  exit 1
+fi
+
+function test_s_alias {
+  shopt -s expand_aliases
+  if [[ $(type -t s) == "alias" ]]; then
+    return 0
+  fi
+  return 1
+}
+
+if test_s_alias; then
+  echo -e "\e[31mWARNING\e[0m: s is an alias ; it should be a bash function.";
+  sleep 1
+fi
+
+HAVE_MAKE_FUNCTION="$(type -t make)"
+HAVE_S_FUNCTION="$(type -t s)"
+HAVE_GS_FUNCTION="$(type -t gs)"
+
+if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+  if [[ -z "$XDG_CONFIG_HOME" ]]; then
+    echo "start_ai_cli: ERROR: XDG_CONFIG_HOME isn't set."
+    exit 1
+  fi
+  AGENTS_FILE="$XDG_CONFIG_HOME/opencode/AGENTS.md"
+else
+  AGENTS_FILE="$HOME/.codex/AGENTS.md"
+fi
+
+function fail {
+  echo "$1"
+  exit 1
+}
+
+# Regenerate $XDG_CONFIG_HOME/opencode/AGENTS.md.
+$HOME/.codex/AGENTS.sh "$HAVE_MAKE_FUNCTION" "$HAVE_S_FUNCTION" "$HAVE_GS_FUNCTION" > $AGENTS_FILE || fail "Failed to create AGENTS.md file"
+
+if [[ $HAVE_MAKE_FUNCTION = "function" ]]; then
+  # Regenerate $CTAGS_FILE
+  make ctags
+fi
+
+# Run the command that was passed to `start_ai_cli`.
+# Usually that is `/usr/bin/codex ...args...`, `opencode ...args...` or `/usr/bin/bun run dev -- ...args...`
+# but it can also be `true` if the objective was to just (re)generate $XDG_CONFIG_HOME/opencode/AGENTS.md.
+exec "$@"
