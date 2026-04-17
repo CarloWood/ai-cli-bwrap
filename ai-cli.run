@@ -523,6 +523,8 @@ bwrap_args=(
   --ro-bind "$HOME_USER/projects/github/ai-cli/ai-cli-bwrap/dot-bash_profile" "$HOME_AICLI/.bash_profile"
   # Bind-mount bin/start_ai_cli from this project that will be executed for opencode agents as COMMAND.
   --ro-bind "$HOME_USER/projects/github/ai-cli/ai-cli-bwrap/bin/start_ai_cli" "$HOME_AICLI/.local/bin/start_ai_cli"
+  # Same for AGENTS.sh that is executed from start_ai_cli.
+  --ro-bind "$HOME_USER/projects/github/ai-cli/ai-cli-bwrap/bin/AGENTS.sh" "$HOME_AICLI/.local/bin/AGENTS.sh"
   # Remount $HOME_AICLI read-only, now that all bind mounts have been added to it.
   --remount-ro "$HOME_AICLI"
   # The CLI needs write access to the gitache root.

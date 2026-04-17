@@ -65,8 +65,3 @@ resource
 
 # export this function
 declare -xf abbreviate_path
-
-# Detect if certain bash functions are available and then pass that to ~/.codex/AGENTS.sh
-#function AGENTS_instructions {
-#  ~/.codex/AGENTS.sh "$(type -t make)" "$(type -t s)" "$(type -t gs)"
-#}

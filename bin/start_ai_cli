@@ -41,7 +41,7 @@ function fail {
 }
 
 # Regenerate $XDG_CONFIG_HOME/opencode/AGENTS.md.
-$HOME/.codex/AGENTS.sh "$HAVE_MAKE_FUNCTION" "$HAVE_S_FUNCTION" "$HAVE_GS_FUNCTION" > $AGENTS_FILE || fail "Failed to create AGENTS.md file"
+$HOME/.local/bin/AGENTS.sh "$HAVE_MAKE_FUNCTION" "$HAVE_S_FUNCTION" "$HAVE_GS_FUNCTION" > $AGENTS_FILE || fail "Failed to create AGENTS.md file"
 
 if [[ $HAVE_MAKE_FUNCTION = "function" ]]; then
   # Regenerate $CTAGS_FILE
