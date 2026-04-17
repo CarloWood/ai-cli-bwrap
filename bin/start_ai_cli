@@ -24,6 +24,13 @@ fi
 HAVE_MAKE_FUNCTION="$(type -t make)"
 HAVE_S_FUNCTION="$(type -t s)"
 HAVE_GS_FUNCTION="$(type -t gs)"
+S_FUNCTION_USES_PRINT0=
+
+if [[ $HAVE_S_FUNCTION == "function" ]]; then
+  if (which prs || which s) | grep -- '-print0' >/dev/null; then
+    S_FUNCTION_USES_PRINT0=yes
+  fi
+fi
 
 if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
   if [[ -z "$XDG_CONFIG_HOME" ]]; then
@@ -41,7 +48,7 @@ function fail {
 }
 
 # Regenerate $XDG_CONFIG_HOME/opencode/AGENTS.md.
-$HOME/.local/bin/AGENTS.sh "$HAVE_MAKE_FUNCTION" "$HAVE_S_FUNCTION" "$HAVE_GS_FUNCTION" > $AGENTS_FILE || fail "Failed to create AGENTS.md file"
+$HOME/.local/bin/AGENTS.sh "$HAVE_MAKE_FUNCTION" "$HAVE_S_FUNCTION" "$HAVE_GS_FUNCTION" "$S_FUNCTION_USES_PRINT0" > $AGENTS_FILE || fail "Failed to create AGENTS.md file"
 
 if [[ $HAVE_MAKE_FUNCTION = "function" ]]; then
   # Regenerate $CTAGS_FILE
