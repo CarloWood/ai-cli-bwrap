@@ -273,6 +273,7 @@ COMMAND="$HOME_AICLI/.local/bin/start_ai_cli"
 # Determine AICLI_MODE and SESSION_ID.
 AICLI_MODE=unknown
 SESSION_ID=
+unset OPENCODE_PURE
 
 if [ "$#" -eq 1 ] && [[ $1 == "shell" ]]; then
   # Run a bash shell with AICLI_MODE=shell.
@@ -302,20 +303,25 @@ else
         ;;
     esac
   done
-  # Try to deduce AICLI_MODE from SESSION_ID if the former wasn't specified on the command line.
-  if [[ $AICLI_MODE == "unknown" && -n "$SESSION_ID" ]]; then
-    local thread_id_dir="$PLANROOT/ThreadID/$SESSION_ID"
-    if [[ -r "$thread_id_dir/mode" ]]; then
-      # Figure out the mode.
-      AICLI_MODE=$(<"$thread_id_dir/mode")
-    else
-      echo -e "\e[31mWARNING: $thread_id_dir DOES NOT EXIST!\e[0m"
-      sleep 2
+  if [[ $AICLI_MODE == "pure" ]]; then
+    # Run opencode with no implicit arguments and OPENCODE_PURE=1.
+    OPENCODE_PURE=1
+  else
+    # Try to deduce AICLI_MODE from SESSION_ID if the former wasn't specified on the command line.
+    if [[ $AICLI_MODE == "unknown" && -n "$SESSION_ID" ]]; then
+      local thread_id_dir="$PLANROOT/ThreadID/$SESSION_ID"
+      if [[ -r "$thread_id_dir/mode" ]]; then
+        # Figure out the mode.
+        AICLI_MODE=$(<"$thread_id_dir/mode")
+      else
+        echo -e "\e[31mWARNING: $thread_id_dir DOES NOT EXIST!\e[0m"
+        sleep 2
+      fi
     fi
-  fi
-  # Try to deduce SESSION_ID from AICLI_MODE if the former wasn't specified on the command line.
-  if [[ -z "$SESSION_ID" && -z ${AICLI_RUN_NEW_SESSION:-} && -L "$PLANROOT/$AICLI_MODE/id" ]]; then
-    SESSION_ID=$(basename "$(readlink "$PLANROOT/$AICLI_MODE/id")")
+    # Try to deduce SESSION_ID from AICLI_MODE if the former wasn't specified on the command line.
+    if [[ -z "$SESSION_ID" && -z ${AICLI_RUN_NEW_SESSION:-} && -L "$PLANROOT/$AICLI_MODE/id" ]]; then
+      SESSION_ID=$(basename "$(readlink "$PLANROOT/$AICLI_MODE/id")")
+    fi
   fi
 fi
 
@@ -387,7 +393,7 @@ elif [[ $AICLI_MODE == "bash" ]]; then
 elif [[ -n "$SESSION_ID" ]]; then
   if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
     command_args+=(-s "$SESSION_ID")
-    if [[ $AICLI_MODE != "unknown" ]]; then
+    if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
   else
@@ -395,7 +401,7 @@ elif [[ -n "$SESSION_ID" ]]; then
   fi
 else
   if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
-    if [[ $AICLI_MODE != "unknown" ]]; then
+    if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
   fi
@@ -573,22 +579,23 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
-export HOME REPOBASE AICLI_MODE AICLI_RUN_OPENCODE
+export HOME REPOBASE AICLI_MODE AICLI_RUN_OPENCODE OPENCODE_PURE
 
 echo "HOME=\"$HOME\""
 echo "REPOBASE=\"$REPOBASE\""
 echo "AICLI_MODE=\"$AICLI_MODE\""
 echo "AICLI_RUN_OPENCODE=\"$AICLI_RUN_OPENCODE\""
+echo "OPENCODE_PURE=${OPENCODE_PURE-<unset>}"
 
 echo "Starting bwrap, command:"
-echo "sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE \\"
+echo "sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_PURE \\"
 echo "  ip netns exec nscodex \\"
 echo "    bwrap $(quote_args "${bwrap_args[@]}") \\"
 echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
-sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_DEBUG_SESSION \
+sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_PURE,OPENCODE_DEBUG_SESSION \
   ip netns exec nscodex \
     bwrap "${bwrap_args[@]}" \
       -- \
