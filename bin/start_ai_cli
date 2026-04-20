@@ -32,7 +32,7 @@ if [[ $HAVE_S_FUNCTION == "function" ]]; then
   fi
 fi
 
-if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   if [[ -z "$XDG_CONFIG_HOME" ]]; then
     echo "start_ai_cli: ERROR: XDG_CONFIG_HOME isn't set."
     exit 1

@@ -3,12 +3,11 @@
 OpenCode is started by running the bash function `opencode` defined in [env.ai-cli](env.ai-cli#L43).
 
 That function simply calls the bash function `ai_cli`, also defined in [env.ai-cli](env.ai-cli#L9),
-passing `--opencode` as first argument. The effect of that is that inside the `ai_cli` bash function
-the variable `run_opencode` is set to `1`, which in turn causes an `AICLI_RUN_OPENCODE=1` before
+passing AICLI_RUN_CLI=opencode as environment variable subsequently used while
 sourcing [ai-cli.run](ai-cli.run).
 
-In other words, running `opencode [<args>]` is equivalent to running either `ai_cli --opencode [<args>]`
-as well as running `AICLI_RUN_OPENCODE=1 ai_cli <args>`.
+In other words, running `opencode [<args>]` is equivalent to running
+`AICLI_RUN_CLI=opencode ai_cli <args>`.
 
 ### Command Syntax
 
@@ -140,7 +139,7 @@ The following environment variables are used by the script [ai-cli.run](ai-cli.r
 * <a id="CDEH_TMP_host">`CDEH_TMP`</a> : defined by [cdeh](https://carlowood.github.io/howto/cdeh.html). `$CDEH_TMP/env.base` is expected to contain the environment associated with the `/` (thus free of any project specific definitions) and will be copied to `$HOME_AICLI/cdeh/env.base` so that `cdeh` also works inside the container resulting in the same environment as on the host.
 * <a id="GITACHE_ROOT_host">`GITACHE_ROOT`</a> : will be bind-mounted read-write inside the container, sharing the [gitache](https://github.com/CarloWood/gitache) root with the host.
 * <a id="AICLI_EXTRA_WRITABLE_ROOTS_host">`AICLI_EXTRA_WRITABLE_ROOTS`</a> : a bash array with additional paths - not used by opencode.
-* <a id="AICLI_RUN_OPENCODE_host">`AICLI_RUN_OPENCODE`</a> : defined to `1` (set by the `ai_cli` bash function, see [above](#Starting-opencode)).
+* <a id="AICLI_RUN_CLI_host">`AICLI_RUN_CLI`</a> : defined to `"opencode"` (set by the `ai_cli` bash function, see [above](#Starting-opencode)).
 * <a id="CODEX_HOME_host">`CODEX_HOME`</a> : set to `$HOME/.codex` (not used by `ai-cli.run` directly). This directory is bind-mounted at `~/.codex` in the container.
 
 ### Defined in the container (visible by `opencode`)
@@ -149,7 +148,7 @@ The following environment variables are changed and exported (if not already) by
 
 * <a id="HOME_container">`HOME`</a> : set to `HOME_AICLI` (`/opt/ext4/nvme2/codex`, see above).
 * <a id="AICLI_MODE_container">`AICLI_MODE`</a> : one of `"shell"`, `"bash"`, `"analyst"`, `"planner"` or `"coder"`.
-* <a id="AICLI_RUN_OPENCODE_container">`AICLI_RUN_OPENCODE`</a> : defined to `1` (set by the `ai_cli` bash function, see above).
+* <a id="AICLI_RUN_CLI_container">`AICLI_RUN_CLI`</a> : defined to `"opencode"` (set by the `ai_cli` bash function, see above).
 
 <a a id="bashprofile"></a>
 The following environment variables are set by `~/.bash_profile` inside the container:

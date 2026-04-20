@@ -1,6 +1,6 @@
 if [ -z "$BASH_EXECUTION_STRING" ]; then
-  AGENT="AICLI"
-  [[ -z "$AICLI_RUN_OPENCODE" ]] || AGENT="OPENCODE"
+  AGENT="$AICLI_RUN_CLI"
+  [[ -n "$AGENT" ]] || AGENT="AICLI"
   echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$AICLI_MODE\e[0m)."
 fi
 

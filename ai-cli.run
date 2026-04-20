@@ -336,7 +336,7 @@ else
   AICLI_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
 fi
 
-if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   echo "Running opencode..."
   # Construct command_args.
   if [[ $REPOBASE == "opencode" ]]; then
@@ -391,7 +391,7 @@ if [[ $AICLI_MODE == "shell" ]]; then
 elif [[ $AICLI_MODE == "bash" ]]; then
   command_args=("-lc" "$(quote_shell_words "$@")")
 elif [[ -n "$SESSION_ID" ]]; then
-  if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+  if [[ $AICLI_RUN_CLI == "opencode" ]]; then
     command_args+=(-s "$SESSION_ID")
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
@@ -400,7 +400,7 @@ elif [[ -n "$SESSION_ID" ]]; then
     command_args+=(resume "$SESSION_ID")
   fi
 else
-  if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+  if [[ $AICLI_RUN_CLI == "opencode" ]]; then
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
@@ -429,7 +429,7 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   AGENT="opencode"
 else
   AGENT="codex"
@@ -441,7 +441,7 @@ if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   killall sockettapd || true
   start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
   # Make the agent listen on the correct socket.
-  if [[ -z "$AICLI_RUN_OPENCODE" ]]; then
+  if [[ -z "$AICLI_RUN_CLI" ]]; then
     command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
   fi
   # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `session_id.js` instead.
@@ -557,7 +557,7 @@ if [[ -n "${BUILDDIR:-}" && -d "$BUILDDIR" ]]; then
    fi
 fi
 
-if [[ -n "$AICLI_RUN_OPENCODE" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
@@ -579,23 +579,23 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
-export HOME REPOBASE AICLI_MODE AICLI_RUN_OPENCODE OPENCODE_PURE
+export HOME REPOBASE AICLI_MODE AICLI_RUN_CLI OPENCODE_PURE
 
 echo "HOME=\"$HOME\""
 echo "REPOBASE=\"$REPOBASE\""
 echo "AICLI_MODE=\"$AICLI_MODE\""
-echo "AICLI_RUN_OPENCODE=\"$AICLI_RUN_OPENCODE\""
+echo "AICLI_RUN_CLI=\"$AICLI_RUN_CLI\""
 echo "OPENCODE_PURE=${OPENCODE_PURE-<unset>}"
 
 echo "Starting bwrap, command:"
-echo "sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_PURE \\"
+echo "sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_CLI,OPENCODE_PURE \\"
 echo "  ip netns exec nscodex \\"
 echo "    bwrap $(quote_args "${bwrap_args[@]}") \\"
 echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
-sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_OPENCODE,OPENCODE_PURE,OPENCODE_DEBUG_SESSION \
+sudo --preserve-env=HOME,REPOBASE,AICLI_MODE,AICLI_RUN_CLI,OPENCODE_PURE,OPENCODE_DEBUG_SESSION \
   ip netns exec nscodex \
     bwrap "${bwrap_args[@]}" \
       -- \
