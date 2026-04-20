@@ -159,7 +159,8 @@
       "color": "#4040ff",
       "permission": {
         "bash": {
-          "aap-analyst-list": "allow"
+          "aap-analyst-list *": "allow",
+          "aap-ls *": "allow"
         }
       }
     },
@@ -201,7 +202,8 @@
           "just *": "allow",
           "make *": "allow",
           "ninja *": "allow",
-          "node *": "allow"
+          "node *": "allow",
+          "aap-*": "allow"
         },
         "edit": {
           "**/*": "allow"
