@@ -355,6 +355,22 @@ if [[ $AICLI_RUN_CLI == "opencode" ]]; then
       "opencode"
     )
   fi
+elif [[ $AICLI_RUN_CLI == "AVA" ]]; then
+  echo "Running AVA..."
+  # Construct command_args.
+  if [[ $REPOBASE == "AVA" ]]; then
+    command_args=(
+      "$BUILDDIR/release/ava"
+      "--cwd"
+      "$AICLI_CWD"
+    )
+  else
+    command_args=(
+      "ava"
+      "--cwd"
+      "$AICLI_CWD"
+    )
+  fi
 else
   echo "Running codex..."
   # Construct roots_json.
@@ -396,6 +412,11 @@ elif [[ -n "$SESSION_ID" ]]; then
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
+  elif [[ $AICLI_RUN_CLI == "AVA" ]]; then
+    command_args+=(--session "$SESSION_ID")
+    if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
+      command_args+=(--agent "$AICLI_MODE")
+    fi
   else
     command_args+=(resume "$SESSION_ID")
   fi
@@ -429,11 +450,8 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-if [[ $AICLI_RUN_CLI == "opencode" ]]; then
-  AGENT="opencode"
-else
-  AGENT="codex"
-fi
+AGENT="$AICLI_RUN_CLI"
+[[ -n "$AGENT" ]] || AGENT="codex"
 echo -e "Running $AGENT in \e[31m\"$AICLI_MODE\" mode\e[0m."
 
 if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
@@ -557,7 +575,7 @@ if [[ -n "${BUILDDIR:-}" && -d "$BUILDDIR" ]]; then
    fi
 fi
 
-if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+if [[ -n $AICLI_RUN_CLI ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is

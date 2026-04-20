@@ -32,12 +32,12 @@ if [[ $HAVE_S_FUNCTION == "function" ]]; then
   fi
 fi
 
-if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+if [[ -n $AICLI_RUN_CLI ]]; then
   if [[ -z "$XDG_CONFIG_HOME" ]]; then
     echo "start_ai_cli: ERROR: XDG_CONFIG_HOME isn't set."
     exit 1
   fi
-  AGENTS_FILE="$XDG_CONFIG_HOME/opencode/AGENTS.md"
+  AGENTS_FILE="$XDG_CONFIG_HOME/$AICLI_RUN_CLI/AGENTS.md"
 else
   AGENTS_FILE="$HOME/.codex/AGENTS.md"
 fi
