@@ -1,0 +1,38 @@
+llm:
+  provider: openai
+  model: gpt-5.4
+  max_tokens: 4096
+  temperature: 0.7
+  thinkingEnabled: true
+  reasoningEffort: high
+  autoCompact: true
+  compactionThreshold: 80
+
+editor:
+  default_editor: vscode
+  tab_size: 4
+  use_spaces: true
+
+ui:
+  theme: dark
+  font_size: 14
+  show_line_numbers: true
+
+features:
+  enable_git: true
+  enable_lsp: true
+  enable_mcp: true
+
+primary_agents:
+  analyst:
+    description: Pre-planning agent that can read PLANROOT and REPOROOT, do web searches.
+    prompt: |
+      You are the analyst primary agent.
+  planner:
+    description: Planning agent that reads REPOROOT, writes plans under PLANROOT. Treat REPOROOT as read-only.
+    prompt: |
+      You are the planner primary agent.
+  coder:
+    description: Default coding agent for implementation work in REPOROOT. Treat PLANROOT as read-only plan context.
+    prompt: |
+      You are the coder primary agent.

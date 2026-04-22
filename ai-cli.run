@@ -13,10 +13,6 @@ if [ "$REPOROOT" != "$WORKSPACE_ROOT/$REPOBASE" ]; then
   echo "Error: REPOROOT != WORKSPACE_ROOT/REPOBASE"
   exit 1
 fi
-if [ -z "$CCACHE_DIR" ]; then
-  echo "Error: CCACHE_DIR not set."
-  exit 1
-fi
 if [[ $(type -t pe) != "function" ]]; then
   echo "Error: no such function: pe"
   exit 1
@@ -36,6 +32,10 @@ fi
 if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
   # This is just a sanity check to make sure that sockettapd will write debug output.
   echo "Error: LIBCWD_RCFILE_OVERRIDE_NAME not set."
+  exit 1
+fi
+if [ -z "${AICLI_RUN_CLI:-}" ]; then
+  echo "Error: AICLI_RUN_CLI not set."
   exit 1
 fi
 
@@ -275,6 +275,15 @@ AICLI_MODE=unknown
 SESSION_ID=
 unset OPENCODE_PURE
 unset AVA_PURE
+AICLI_HOST_BUILD=
+AICLI_CCACHE_DIR="$CCACHE_DIR"
+# If SCCACHE_DIR is set we assume that we must use that.
+[[ -z ${SCCACHE_DIR:-} ]] || AICLI_CCACHE_DIR="$SCCACHE_DIR"
+
+if [ -z "$AICLI_CCACHE_DIR" ]; then
+  echo "Error: CCACHE_DIR nor SCCACHE_DIR are set."
+  exit 1
+fi
 
 if [ "$#" -eq 1 ] && [[ $1 == "shell" ]]; then
   # Run a bash shell with AICLI_MODE=shell.
@@ -338,7 +347,7 @@ else
   AICLI_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
 fi
 
-if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
   echo "Running opencode..."
   # Construct command_args.
   if [[ $REPOBASE == "opencode" ]]; then
@@ -357,12 +366,14 @@ if [[ $AICLI_RUN_CLI == "opencode" ]]; then
       "opencode"
     )
   fi
-elif [[ $AICLI_RUN_CLI == "AVA" ]]; then
+elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
   echo "Running AVA..."
   # Construct command_args.
   if [[ $REPOBASE == "AVA" ]]; then
+    mkdir -p "$WORKSPACE_ROOT/host-build"
+    AICLI_HOST_BUILD="${HOME_AICLI}/workspace/host-build"
     command_args=(
-      "$BUILDDIR/release/ava"
+      "$AICLI_HOST_BUILD/debug/ava"
       "--cwd"
       "$AICLI_CWD"
     )
@@ -409,12 +420,12 @@ if [[ $AICLI_MODE == "shell" ]]; then
 elif [[ $AICLI_MODE == "bash" ]]; then
   command_args=("-lc" "$(quote_shell_words "$@")")
 elif [[ -n "$SESSION_ID" ]]; then
-  if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+  if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
     command_args+=(-s "$SESSION_ID")
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
-  elif [[ $AICLI_RUN_CLI == "AVA" ]]; then
+  elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
     command_args+=(--session "$SESSION_ID")
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
@@ -423,7 +434,7 @@ elif [[ -n "$SESSION_ID" ]]; then
     command_args+=(resume "$SESSION_ID")
   fi
 else
-  if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+  if [[ -n ${AICLI_RUN_CLI:-} ]]; then
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
@@ -452,7 +463,7 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-AGENT="$AICLI_RUN_CLI"
+AGENT="${AICLI_RUN_CLI:-}"
 [[ -n "$AGENT" ]] || AGENT="codex"
 echo -e "Running $AGENT in \e[31m\"$AICLI_MODE\" mode\e[0m."
 
@@ -461,7 +472,7 @@ if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   killall sockettapd || true
   start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
   # Make the agent listen on the correct socket.
-  if [[ -z "$AICLI_RUN_CLI" ]]; then
+  if [[ -z "${AICLI_RUN_CLI:-}" ]]; then
     command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
   fi
   # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `session_id.js` instead.
@@ -555,29 +566,39 @@ bwrap_args=(
   --remount-ro "$HOME_AICLI"
   # The CLI needs write access to the gitache root.
   --bind "$GITACHE_ROOT" "$GITACHE_ROOT"
-  --perms $(mode_of /tmp) --tmpfs "$CCACHE_DIR"
+  --perms $(mode_of /tmp) --tmpfs "$AICLI_CCACHE_DIR"
   # Change to the desired working directory before starting the CLI.
   --chdir "$AICLI_CWD"
 )
 
 echo "BUILDDIR=${BUILDDIR-<undefined>}"
+echo "AICLI_HOST_BUILD=${AICLI_HOST_BUILD-<undefined>}"
+echo "AICLI_CCACHE_DIR=$AICLI_CCACHE_DIR"
+
+if [[ -n "${AICLI_HOST_BUILD:-}" ]]; then
+  # Add the build directory of the host to the container.
+  bwrap_args+=(
+    --ro-bind "$BUILDDIR" "$AICLI_HOST_BUILD"
+  )
+fi
+
 if [[ -n "${BUILDDIR:-}" && -d "$BUILDDIR" ]]; then
   if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
      BUILDDIR_BASE="$(realpath -s --relative-to="$WORKSPACE_ROOT" "$BUILDDIR")"
      # The build directory for the AI on the host (so it is cached over opencode restarts).
-     HOST_BUILDDIR="$HOME_AICLI/.cache/ai-cli/build"
-     mkdir -p "$HOST_BUILDDIR"
+     BUILDDIR_CACHE="$HOME_AICLI/.cache/ai-cli/build"
+     mkdir -p "$BUILDDIR_CACHE"
      bwrap_args+=(
        # Always mount the BUILDDIR for the AI read-write at $WORKSPACE_ROOT/${BUILDDIR_BASE}.
        # See `BUILDDIR="$WORKSPACE_ROOT/${BUILDDIR_BASE}"` in env.projects.
-       --bind "$HOST_BUILDDIR" "${HOME_AICLI}/workspace/${BUILDDIR_BASE}"
+       --bind "$BUILDDIR_CACHE" "${HOME_AICLI}/workspace/${BUILDDIR_BASE}"
      )
    else
      echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
    fi
 fi
 
-if [[ -n $AICLI_RUN_CLI ]]; then
+if [[ -n ${AICLI_RUN_CLI:-} ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
@@ -599,15 +620,21 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
+if [[ $AICLI_RUN_CLI == "ava" && $REPOBASE == "AVA" ]]; then
+  bwrap_args+=(
+    --setenv RUST_BACKTRACE 1
+  )
+fi
+
 export HOME REPOBASE AICLI_MODE AICLI_RUN_CLI OPENCODE_PURE AVA_PURE
 
 echo "HOME=\"$HOME\""
 echo "REPOBASE=\"$REPOBASE\""
 echo "AICLI_MODE=\"$AICLI_MODE\""
-echo "AICLI_RUN_CLI=\"$AICLI_RUN_CLI\""
-if [[ $AICLI_RUN_CLI == "opencode" ]]; then
+echo "AICLI_RUN_CLI=\"${AICLI_RUN_CLI:-}\""
+if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
   echo "OPENCODE_PURE=${OPENCODE_PURE-<unset>}"
-elif [[ $AICLI_RUN_CLI == "AVA" ]]; then
+elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
   echo "AVA_PURE=${AVA_PURE-<unset>}"
 fi
 
