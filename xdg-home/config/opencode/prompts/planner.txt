@@ -52,7 +52,7 @@ Use these helpers to modify the current plan items, structure and descriptions.
 
 Initialize PLANROOT with an initial objective, the main objective.
 
-Read **description** from stdin (use heredoc).
+The description is read from stdin (use heredoc).
 
 ## `aap-ls [--fix|--no-fix] [--help]`
 

@@ -37,7 +37,7 @@ discussed changed; for example from "needs more discussion / an answer" to havin
 # Topic List
 
 Before creating a list yourself run the command `aap-analyst-list` to see if the file
-`$PLANROOT/analyst/current/topics` exists and then that as the current list going forward.
+`$PLANROOT/analyst/current/topics` exists and use that as the current list going forward.
 This command may also be run by the user, for example at the start of a chat session or
 when the file was externally editted.
 
