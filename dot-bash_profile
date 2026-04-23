@@ -31,6 +31,8 @@ export XDG_CACHE_HOME="$WORKSPACE_ROOT/cache/xdg"
 export OPENCODE_DISABLE_CHANNEL_DB=1
 # Need to export *everything* :(
 export CDEH_ROOT
+# Except this one: this exploits that commands executed by opencode do not inherit non-exported environment.
+OPENCODE_IS_USER_COMMAND=52691963
 
 if [ "$AICLI_MODE" = "shell" ]; then
   #------------------------------------------------------------------------------
