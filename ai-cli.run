@@ -43,7 +43,7 @@ fi
 set -u
 
 # This is the directory that is bind mounted in the container as ~/workspace/.xdg.
-AICLI_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-root"
+AICLI_XDG_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/xdg-home"
 echo "AICLI_XDG_ROOT=\"$AICLI_XDG_ROOT\""
 
 realpath_nolast ()
