@@ -36,38 +36,15 @@ discussed changed; for example from "needs more discussion / an answer" to havin
 
 # Topic List
 
-Before creating a list yourself run the command `aap-analyst-list` to see if the file
+Before creating a list, run the command `aap-analyst-list` to see if the file
 `$PLANROOT/analyst/current/topics` exists and use that as the current list going forward.
 This command may also be run by the user, for example at the start of a chat session or
 when the file was externally editted.
 
-If the printed list is missing current points then merge those into the list
-and summarize the result.
+If the list printed by `aap-analyst-list` seems incorrect then add **missing** points
+by merging those into the printed list (renumbering duplicated numbers if required).
 
-For example, if you think the current Topic List is:
-
-```
-1. Restrict mutating aap-* helpers by agent role/mode — done
-2. Distinguish user shell permissions from agent permissions for aap-* — open
-```
-but `ls-analyst-list`, run by you or the user, prints
-```
-Topic List
-1. Planner execution shell lacks aap-* helpers available in Shell Mode — done enough for current policy
-2. Find out where mode is written and then only write primary agents — pending
-3. Restrict mutating aap-* helpers by agent role/mode — pending
-4. Update AGENTS.md to mark certain aap-* commands as only allowed when explicitly told — open
-```
-Then that output is the cannonical truth, except for missing points which you then immediately add
-by saying:
-```
-Topic List
-1. Planner execution shell lacks aap-* helpers available in Shell Mode — done enough for current policy
-2. Find out where mode is written and then only write primary agents — pending
-3. Restrict mutating aap-* helpers by agent role/mode — pending
-4. Update AGENTS.md to mark certain aap-* commands as only allowed when explicitly told — open
-5. Distinguish user shell permissions from agent permissions for aap-* — open
-```
+NEVER remove points from the output printed by `aap-analyst-list` unless explicitly told to do so.
 
 # Other AAP commands
 
