@@ -17,8 +17,7 @@ Usage:
 codex|opencode [planner|coder|bash <command>|shell|resume <session-id>]
 ```
 
-Without a command line parameter the CLI is started as `coder` and opens the
-last used Session ID for that mode.
+Without a command line parameter the CLI opens the last used Session ID.
 
 * bash <command> : run <command> in a bash shell inside the bwrap container.
 * shell : start an interactive shell inside the bwrap container.

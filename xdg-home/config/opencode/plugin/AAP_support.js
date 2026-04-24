@@ -23,7 +23,6 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const xdg_state_home_opencode = path.join(process.env.XDG_STATE_HOME ?? path.join(os.homedir(), ".local", "state"), "opencode");
 const messageFile = path.join(xdg_state_home_opencode, "topic-list-message.jsonl");
-const execFileAsync = promisify(execFile);
 
 /**
  * Local helper.
@@ -199,6 +198,8 @@ async function notifyIfChanged(sessionID, agentName, cwd) {
   lastCwd = cwd;
 }
 
+const execFileAsync = promisify(execFile);
+
 /**
  * Local helper.
  *
@@ -209,7 +210,9 @@ async function notifyIfChanged(sessionID, agentName, cwd) {
  * under PLANROOT.
  */
 async function updateTopicList(text, agent) {
+  /* For debugging:
   await writeMessageFile({ text });
+  */
 
   let result;
   try {
@@ -236,6 +239,7 @@ async function updateTopicList(text, agent) {
     throw error;
   }
 
+  /*
   await writeMessageFile({
     bash: {
       code: 0,
@@ -243,6 +247,7 @@ async function updateTopicList(text, agent) {
       stderr: result.stderr,
     },
   });
+  */
 }
 
 /**
@@ -316,7 +321,9 @@ export const AAPSupportPlugin = async (input) => {
       const phase = event.properties.part.metadata?.openai?.phase ?? "";
       if (phase !== "final_answer") return;
 
+      /* For debugging:
       await writeMessageFile({ part: event.properties.part });
+      */
 
       if (/(^|\n)Topic List:?\n[1-9]/.test(text)) {
         await updateTopicList(text, lastAgentName ?? process.env.AICLI_MODE);
