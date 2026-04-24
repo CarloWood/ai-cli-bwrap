@@ -341,8 +341,10 @@ setup_aap
 PLANBASE="$(basename "$PLANROOT")"
 
 # Determine the working directory where the CLI should start (as container path).
-if [[ $AICLI_MODE == "analyst" || $AICLI_MODE == "planner" ]]; then
-  AICLI_CWD="$HOME_AICLI/workspace/$PLANBASE"
+if [[ $AICLI_MODE == "analyst" ]] then
+  AICLI_CWD="$HOME_AICLI/workspace/$PLANBASE/analyst"
+elif [[ $AICLI_MODE == "planner" ]]; then
+  AICLI_CWD="$HOME_AICLI/workspace/$PLANBASE/planner"
 else
   AICLI_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
 fi
