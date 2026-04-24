@@ -475,7 +475,7 @@ if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   if [[ -z "${AICLI_RUN_CLI:-}" ]]; then
     command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
   fi
-  # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `session_id.js` instead.
+  # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `AAP_support.js` instead.
   #command_args+=(--exec-socket-path "$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
 fi
 

@@ -27,7 +27,7 @@ last used Session ID for that mode.
 
 Any non- shell or bash mode also starts [sockettapd](https://github.com/CarloWood/codex-sockettapd) listening on `$PLANROOT/$REPOBASE.sock`.
 For that to work you need the `cw_exec_socket_tap` branch that is part of the `master` branch of my [codex fork](https://github.com/CarloWood/openai-codex),
-or the [`session_id.js`](xdg-home/config/opencode/plugin/session_id.js) plugin for opencode.
+or the [`AAP_support.js`](xdg-home/config/opencode/plugin/AAP_support.js) plugin for opencode.
 
 The project also requires [remountd](https://github.com/CarloWood/remountd), a systemd service,
 to be installed and enabled. This allows for switching between a read-only and read-write
