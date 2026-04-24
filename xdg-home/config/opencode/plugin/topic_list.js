@@ -1,6 +1,8 @@
-import { mkdir, appendFile, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdir, appendFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 
 /**
  * opencode plugin: inspect message-part update events while experimenting with
@@ -12,11 +14,14 @@ import path from "node:path";
  *   message part payload rather than only message metadata.
  * - Write matching final-answer Topic List text to a state file so we can
  *   inspect exactly what opencode publishes.
- * - Update `$PLANROOT/analyst/current/topics` whenever a Topic List is found.
+ * - Hand the full assistant message text to the bash helper
+ *   `aap-analyst-update-topic-list`, which is responsible for extracting the
+ *   Topic List block and updating `$PLANROOT/analyst/current/topics`.
  */
 
 const dir = path.join(process.env.XDG_STATE_HOME ?? path.join(os.homedir(), ".local", "state"), "opencode");
 const messageFile = path.join(dir, "topic-list-message.jsonl");
+const execFileAsync = promisify(execFile);
 
 /**
  * Local helper.
@@ -33,36 +38,46 @@ async function writeMessageFile(payload) {
  * Local helper.
  *
  * Intended effect:
- * Extract only the Topic List block from a larger assistant reply.
- *
- * Rules used for now:
- * - Ignore any leading text before the first `Topic List\n[1-9]` match.
- * - Stop at the first blank line after the list, or at end of text.
+ * Record the full assistant message text for debugging, then hand that exact
+ * text to the bash helper `aap-analyst-update-topic-list`. The bash helper is
+ * responsible for extracting the Topic List block and updating the topics file
+ * under PLANROOT.
  */
-function extractTopicList(text) {
-  const match = text.match(/(?:^|\n)(Topic List\n[1-9][\s\S]*?)(?:\n\n|$)/);
-  return match?.[1];
-}
+async function updateTopicList(text, agent) {
+  await writeMessageFile({ text });
 
-/**
- * Local helper.
- *
- * Intended effect:
- * Persist the extracted Topic List to the current analyst topics file under
- * PLANROOT and also append a debug record to XDG state.
- */
-async function updateTopicList(text) {
-  const topicList = extractTopicList(text);
+  let result;
+  try {
+    result = await execFileAsync(
+      "bash",
+      ["-lc", 'aap-analyst-update-topic-list "$TOPIC_LIST_TEXT"'],
+      {
+        env: {
+          ...process.env,
+          AICLI_MODE: agent,
+          TOPIC_LIST_TEXT: text,
+        },
+      },
+    );
+  } catch (error) {
+    await writeMessageFile({
+      bash: {
+        code: error.code,
+        stdout: error.stdout,
+        stderr: error.stderr,
+        error: String(error),
+      },
+    });
+    throw error;
+  }
 
-  await writeMessageFile({ text, topicList });
-  if (!topicList) return;
-
-  const planroot = process.env.PLANROOT;
-  if (!planroot) return;
-
-  const topicsPath = path.join(planroot, "analyst", "current", "topics");
-  await mkdir(path.dirname(topicsPath), { recursive: true });
-  await writeFile(topicsPath, topicList.endsWith("\n") ? topicList : topicList + "\n");
+  await writeMessageFile({
+    bash: {
+      code: 0,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    },
+  });
 }
 
 /**
@@ -95,7 +110,7 @@ export const TopicListPlugin = async () => {
       if (phase !== "final_answer") return;
 
       if (/(^|\n)Topic List\n[1-9]/.test(text)) {
-        await updateTopicList(text);
+        await updateTopicList(text, event.properties.part.agent ?? process.env.AICLI_MODE ?? "");
       }
     },
   };
