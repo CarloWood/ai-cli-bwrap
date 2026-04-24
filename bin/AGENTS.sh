@@ -23,6 +23,10 @@ Use these with priority instead of using a full path, you can always rely on the
 
 Note: normally you do not even need to use these because using paths relative to the current [working] directory (CWD) are even better.
 
+Directories can unexpectedly change due to switching projects and restarting the CLI.
+Therefore avoid using absolute paths, even those that used to work, if the path is somewhere inside $WORKSPACE_ROOT.
+THINK and WORK with the above environment variables for all file and directory references.
+
 EOF_important_environment_variables
 #==============================================================================
 
