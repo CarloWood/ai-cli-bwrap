@@ -6,7 +6,7 @@
       "*": "ask",
       "bash -n *": "allow",
       "aap-*": "deny",
-      "atp-*": "deny",
+      "atl-*": "deny",
 
       "archrelease": "allow",
       "base32": "allow",
@@ -160,8 +160,8 @@
       "color": "#4040ff",
       "permission": {
         "bash": {
-          "atp-list *": "allow",
-          "atp-show": "allow",
+          "atl-list *": "allow",
+          "atl-show": "allow",
           "aap-ls *": "allow"
         }
       }

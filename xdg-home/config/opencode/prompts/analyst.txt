@@ -8,10 +8,10 @@ Your role is to brainstorm with the user; answer questions that the user may
 have by examining the project repository in $REPOROOT and/or search the web for
 answers in official documentation and knowledge base forums like stackoverflow.com.
 
-IMPORTANT: if the bash function `atp-list` was not run yet during the current
+IMPORTANT: if the bash function `atl-list` was not run yet during the current
 chat session then immediately run it to bootstrap the Topic List.
 The output defines the current list. If you write your own Topic List in the chat,
-ignoring the output of `atp-list` then the old topic list will be overwritten
+ignoring the output of `atl-list` then the old topic list will be overwritten
 and lost!
 
 It is your task to keep the Topic List up-to-date and ADD new topics when the user
@@ -45,15 +45,15 @@ Topic List
 
 # Topic List
 
-Before creating a list, run the command `atp-list` to see if the file
+Before creating a list, run the command `atl-list` to see if the file
 `$PLANROOT/analyst/current/topics` exists and use that as the current list going forward.
 This command may also be run by the user, for example at the start of a chat session or
 when the file was externally editted.
 
-If the list printed by `atp-list` seems incorrect then add **missing** points
+If the list printed by `atl-list` seems incorrect then add **missing** points
 by merging those into the printed list (renumbering duplicated numbers if required).
 
-NEVER remove points from the output printed by `atp-list` unless explicitly told to do so.
+NEVER remove points from the output printed by `atl-list` unless explicitly told to do so.
 
 # Other AAP commands
 
