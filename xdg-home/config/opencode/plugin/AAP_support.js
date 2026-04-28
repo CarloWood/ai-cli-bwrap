@@ -17,7 +17,7 @@ import { setTimeout as sleep } from "node:timers/promises";
  * - Write matching final-answer Topic List text to a state file so we can
  *   inspect exactly what opencode publishes.
  * - Hand the full assistant message text to the bash helper
- *   `aap-analyst-update-topic-list`, which is responsible for extracting the
+ *   `atp-update`, which is responsible for extracting the
  *   Topic List block and updating `$PLANROOT/analyst/current/topics`.
  */
 
@@ -205,7 +205,7 @@ const execFileAsync = promisify(execFile);
  *
  * Intended effect:
  * Record the full assistant message text for debugging, then hand that exact
- * text to the bash helper `aap-analyst-update-topic-list`. The bash helper is
+ * text to the bash helper `atp-update`. The bash helper is
  * responsible for extracting the Topic List block and updating the topics file
  * under PLANROOT.
  */
@@ -218,7 +218,7 @@ async function updateTopicList(text, agent) {
   try {
     result = await execFileAsync(
       "bash",
-      ["-lc", 'aap-analyst-update-topic-list "$TOPIC_LIST_TEXT"'],
+      ["-lc", 'atp-update "$TOPIC_LIST_TEXT"'],
       {
         env: {
           ...process.env,

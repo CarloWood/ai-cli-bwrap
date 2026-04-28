@@ -19,33 +19,37 @@ Retrieve the current objective by running `aap-ls`.
 
 Use these helpers to obtain and interact with the current plan.
 
-## `aap-ls`
+## `aap-ls [--help]`
 
-```
-$ aap-ls --help
-usage: aap-ls [--help]
-Print an overview of the current AAP ObjectiveTree.
-```
+Print an overview of the current objective and its parent.
+
 The current objective is marked with a `@` and printed at the bottom.
 Sibling objectives that are already achieved are marked with a `v`.
 
 ## `aap-configure [<cmake args>...]`
+
+Configure the current project into the planner-specific build directory.
+
+Only use this when `$REPOROOT` uses CMake.
+
 ## `aap-build [<cmake --build args>...]`
 
-These allow you to configure and build the current project.
-Only valid if the current project uses `cmake`.
+Build the current project from the planner-specific build directory.
+
+Only use this when `$REPOROOT` uses CMake.
 
 ## `aap-done <ref>`
 
-Mark the current objective as achieved (must match `<ref>`), then update
-current_objective to the lexicographically first not-achieved leaf.
+Mark the current objective as achieved, then update `current_objective` to the
+first not-achieved <node> in lexicographic depth-first post-order traversal.
+
+<ref> must match the current objective.
 
 ## `aap-previous`
 
-Move current_objective to the previous leaf goal (depth-first lexicographic
-order) and mark it not-achieved.
+Move `current_objective` to the previous node in lexicographic depth-first post-order and mark it not-achieved.
 
-Normally you should only use this command if the **user** specifically asks
-to revisit the previous objective/goal because it was erroneously marked as done.
+Normally this is only used when the user specifically asks to revisit the
+previous objective or goal because it was marked done by mistake.
 
 ===The End Of prompts/coder.txt===
