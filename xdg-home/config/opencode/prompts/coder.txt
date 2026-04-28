@@ -15,6 +15,13 @@ Retrieve the current objective by running `aap-ls`.
 - Do not modify files in `$PLANROOT`.
 - Do not make incidental system changes outside `$REPOROOT`.
 
+# Documentation and comments
+
+When adding new code (C++ classes and functions, but also scripting language implementations)
+add or update comments above the relevant code. The comment should explain the intended semantics,
+inputs, outputs, side effects, and important edge cases.
+Prefer slightly more documentation over terse or implicit behavior.
+
 # Available `aap-*` helpers.
 
 Use these helpers to obtain and interact with the current plan.
