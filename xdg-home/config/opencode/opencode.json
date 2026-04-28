@@ -161,7 +161,7 @@
       "permission": {
         "bash": {
           "atl-list *": "allow",
-          "atl-show": "allow",
+          "atl-show *": "allow",
           "aap-ls *": "allow"
         }
       }
@@ -173,7 +173,9 @@
       "color": "warning",
       "permission": {
         "bash": {
-          "aap-*": "allow"
+          "aap-*": "allow",
+          "atl-list *": "allow",
+          "atl-show *": "allow"
         },
         "edit": {
           "**/*": "allow"
@@ -188,6 +190,8 @@
       "permission": {
         "bash": {
           "aap-ls *": "allow",
+          "atl-list *": "allow",
+          "atl-show *": "allow",
           "as *": "allow",
           "autogen.sh": "allow",
           "c++ *": "allow",
@@ -204,8 +208,7 @@
           "just *": "allow",
           "make *": "allow",
           "ninja *": "allow",
-          "node *": "allow",
-          "aap-*": "allow"
+          "node *": "allow"
         },
         "edit": {
           "**/*": "allow"
