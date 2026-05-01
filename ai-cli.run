@@ -338,7 +338,7 @@ fi
 
 # Setup Agent Assisted Planner (AAP) project.
 setup_aap
-PLANBASE="$(basename "$PLANROOT")"
+PLANBASE="$REPOBASE-AAP"
 
 # Determine the working directory where the CLI should start (as container path).
 if [[ $AICLI_MODE == "analyst" ]] then
