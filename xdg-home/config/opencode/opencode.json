@@ -191,9 +191,9 @@
         "bash": {
           "aap-ls *": "allow",
           "aap-configure *": "allow",
-          "aap-build ": "allow",
-          "aap-done": "allow",
-          "aap-previous": "ask",
+          "aap-build *": "allow",
+          "aap-done *": "allow",
+          "aap-previous *": "ask",
           "atl-list *": "allow",
           "atl-show *": "allow",
           "as *": "allow",
