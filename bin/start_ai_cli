@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 echo "Running: start_ai_cli $@"
-echo "REPOROOT=\"$REPOROOT\", PLANROOT=\"$PLANROOT\", BUILDDIR=\"$BUILDDIR\""
+echo "REPOROOT=\"$REPOROOT\", PLANROOT=\"$PLANROOT\", BUILDDIR=\"$BUILDDIR\", PWD=\"$PWD\""
 
 if [[ -z "$AICLI_INSIDE_ENVIRONMENT" ]]; then
   echo "start_ai_cli: ERROR: must be run inside netns nscodex."

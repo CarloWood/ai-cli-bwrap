@@ -124,7 +124,8 @@
       "sleep *": "allow",
       "strace *": "allow",
       "tail *": "allow",
-      "true": "allow",
+      "true *": "allow",
+      "type *": "allow",
       "wc *": "allow",
       "which *": "allow",
       "zcat *": "allow"

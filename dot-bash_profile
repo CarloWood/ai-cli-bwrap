@@ -1,8 +1,12 @@
-if [ -z "$BASH_EXECUTION_STRING" ]; then
-  AGENT="$AICLI_RUN_CLI"
-  [[ -n "$AGENT" ]] || AGENT="AICLI"
-  echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$AICLI_MODE\e[0m)."
+if [ -n "$BASH_EXECUTION_STRING" ]; then
+  # If BASH_EXECUTION_STRING is set then this is a user command run from opencode.
+  # The environment should already be correct in this case (we use what is set when opencode was started).
+  return 0
 fi
+
+AGENT="$AICLI_RUN_CLI"
+[[ -n "$AGENT" ]] || AGENT="AICLI"
+echo -e "Starting \e[31m$AGENT\e[0m environment (\e[32m$AICLI_MODE\e[0m)."
 
 export WORKSPACE_ROOT=$HOME/workspace
 export HOME_AICLI=$HOME
