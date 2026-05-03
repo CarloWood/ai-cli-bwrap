@@ -71,3 +71,4 @@ resource
 
 # Export abbreviate_path, because the AI needs it and opencode only provides it with exported stuff :/.
 declare -xf abbreviate_path
+declare -xf which
