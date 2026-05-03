@@ -13,6 +13,13 @@ OTHER_HTTPS_DOMAINS=(
   # opencode.
   models.dev
   opencode.ai
+  # man pages.
+  en.cppreference.com
+  stackoverflow.com
+  www.geeksforgeeks.org
+  invisible-island.net
+  docs.oracle.com
+  man.archlinux.org
 )
 
 CHATGPT_IPV4=()
