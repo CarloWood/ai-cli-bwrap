@@ -20,6 +20,7 @@ OTHER_HTTPS_DOMAINS=(
   invisible-island.net
   docs.oracle.com
   man.archlinux.org
+  cmake.org
 )
 
 CHATGPT_IPV4=()
