@@ -69,6 +69,12 @@ __cdeh_store_environment
 # Put it all together.
 resource
 
+# Support for aap-configure.
+export AAP_BUILD_TYPE="${CMAKE_CONFIG:-Debug}"
+export AAP_GENERATOR="Ninja"
+
 # Export abbreviate_path, because the AI needs it and opencode only provides it with exported stuff :/.
 declare -xf abbreviate_path
 declare -xf which
+declare -xf findsymbol
+declare -xf change_config
