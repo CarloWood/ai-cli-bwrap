@@ -197,6 +197,7 @@
           "aap-ls *": "allow",
           "aap-configure *": "allow",
           "aap-build *": "allow",
+          "aap-test *": "allow",
           "aap-done *": "allow",
           "aap-previous *": "ask",
           "atl-list *": "allow",
