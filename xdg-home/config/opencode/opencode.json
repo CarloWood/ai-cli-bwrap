@@ -40,6 +40,7 @@
       "cut *": "allow",
       "date *": "allow",
       "dd *": "allow",
+      "declare -F": "allow",
       "df *": "allow",
       "diff *": "allow",
       "diff3 *": "allow",
