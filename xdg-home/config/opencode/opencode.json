@@ -113,6 +113,7 @@
       "head": "allow",
       "ln *": "allow",
       "ls *": "allow",
+      "man *": "allow",
       "nl *": "allow",
       "node --check *": "allow",
       "perl *": "allow",
