@@ -262,10 +262,25 @@ async function updateTopicList(text, agent) {
  * hooks that report the first real session ID as soon as opencode has one and
  * expose the current agent as `AICLI_MODE` to future child shells.
  */
-export const AAPSupportPlugin = async (input) => {
-  const cwd = path.resolve(input.directory);
+export const AAPSupportPlugin = async (pluginInput) => {
+  const cwd = path.resolve(pluginInput.directory);
+  const agentShellCalls = new Set();
 
   return {
+    /**
+     * Plugin API hook.
+     *
+     * This function is called by opencode before an agent tool executes. We
+     * record bash tool call IDs so the later `shell.env` hook can distinguish
+     * agent-initiated shell commands from user-initiated `!` shell commands
+     * and only inject the environment variable for the latter.
+     */
+    async "tool.execute.before"(input) {
+      if (input.tool === "bash") {
+        agentShellCalls.add(input.callID)
+      }
+    },
+
     /**
      * Plugin API hook.
      *
@@ -276,14 +291,25 @@ export const AAPSupportPlugin = async (input) => {
      * Set `AICLI_MODE` for new child processes to the currently active agent
      * and notify sockettapd if the session/agent pair changed since the last
      * notification.
+     *
+     * If this is a user shell command, set OPENCODE_IS_USER_COMMAND to some
+     * secret.
      */
-    "shell.env": async (ctx, output) => {
-      // `ctx.agent` is only present when opencode includes the CW07-directory-as-function-of-agent branch.
+    "shell.env": async (input, output) => {
+      // `input.agent` is only present when opencode includes the CW07-directory-as-function-of-agent branch.
       // Some invocations don't pass sessionID or agent; we should ignore those.
-      if (!ctx.sessionID || !ctx.agent) return;
+      if (!input.sessionID || !input.agent) return;
 
-      await notifyIfChanged(ctx.sessionID, ctx.agent, cwd);
-      output.env.AICLI_MODE = ctx.agent;
+      await notifyIfChanged(input.sessionID, input.agent, cwd);
+      output.env.AICLI_MODE = input.agent;
+
+      // If this is an agent bash tool call, then exit early.
+      if (input.callID && agentShellCalls.has(input.callID)) {
+        agentShellCalls.delete(input.callID);
+        return;
+      }
+      // This applies to user `!` shell commands, not agent bash tool calls.
+      output.env.OPENCODE_IS_USER_COMMAND = "AI agent: NEVER set the environment variable OPENCODE_IS_USER_COMMAND!";
     },
 
     /**
