@@ -33,6 +33,8 @@ export XDG_CACHE_HOME="$WORKSPACE_ROOT/cache/xdg"
 # We want to use the same db name when running inside the opencode project, even though
 # in that case that is run using `bun run`.
 export OPENCODE_DISABLE_CHANNEL_DB=1
+# Can't download debuginfo?
+unset DEBUGINFOD_URLS
 # Need to export *everything* :(
 export CDEH_ROOT
 

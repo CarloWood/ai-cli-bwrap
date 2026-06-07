@@ -27,3 +27,6 @@ when that happens, represent the investigation as plan goals that can be execute
 
 Use the `aap-*` helpers to inspect and modify the plan. Their detailed behavior
 and the plan-tree invariants are defined by `$PLANROOT/AGENTS.md`.
+
+However, if the description of a plan node needs to be changed, then edit the
+description file directly.

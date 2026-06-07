@@ -104,6 +104,8 @@
       "cat *": "allow",
       "cd *": "allow",
       "echo *": "allow",
+      "readelf *": "allow",
+      "eu-readelf *": "allow",
       "false": "allow",
       "find *": "allow",
       "findname *": "allow",
@@ -113,11 +115,13 @@
       "gs *": "allow",
       "head": "allow",
       "ln *": "allow",
+      "llvm-dwarfdump *": "allow",
       "ls *": "allow",
       "man *": "allow",
       "nl *": "allow",
       "nm *": "allow",
       "node --check *": "allow",
+      "objdump *": "allow",
       "perl *": "allow",
       "pgrep *": "allow",
       "printenv *": "allow",
@@ -126,6 +130,7 @@
       "pwd": "allow",
       "python *": "allow",
       "python3 *": "allow",
+      "readlink *": "allow",
       "rg *": "allow",
       "sed *": "allow",
       "set *": "allow",
@@ -151,7 +156,8 @@
     "external_directory": {
       "{env:WORKSPACE_ROOT}/**": "allow",
       "{env:WORKSPACE_ROOT}/.xdg/**": "allow",
-      "{env:GITACHE_ROOT}/**": "deny"
+      "{env:GITACHE_ROOT}/**": "deny",
+      "/usr/include/**": "allow"
     }
   },
   "agent": {
@@ -167,6 +173,8 @@
     "analyst": {
       "description": "Pre-planning agent that can read PLANROOT and REPOROOT, do web searches.",
       "mode": "primary",
+      "model": "openai/gpt-5.5",
+      "variant": "high",
       "prompt": "{file:./prompts/analyst.txt}",
       "color": "#4040ff",
       "permission": {
@@ -180,6 +188,8 @@
     "planner": {
       "description": "Planning agent that reads REPOROOT, writes plans under PLANROOT. Treat REPOROOT as read-only.",
       "mode": "primary",
+      "model": "openai/gpt-5.5",
+      "variant": "high",
       "prompt": "{file:./prompts/planner.txt}",
       "color": "warning",
       "permission": {
@@ -196,6 +206,8 @@
     "coder": {
       "description": "Default coding agent for implementation work in REPOROOT. Treat PLANROOT as read-only plan context.",
       "mode": "primary",
+      "model": "openai/gpt-5.5",
+      "variant": "high",
       "prompt": "{file:./prompts/coder.txt}",
       "color": "info",
       "permission": {
@@ -204,7 +216,7 @@
           "aap-configure *": "allow",
           "aap-build *": "allow",
           "aap-test *": "allow",
-          "aap-done *": "allow",
+          "aap-done *": "ask",
           "aap-previous *": "ask",
           "atl-list *": "allow",
           "atl-show *": "allow",
@@ -222,6 +234,7 @@
           "configure": "allow",
           "ctest *": "allow",
           "gcc *": "allow",
+          "gdb *": "allow",
           "g++ *": "allow",
           "git *": "allow",
           "just *": "allow",

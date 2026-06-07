@@ -20,7 +20,33 @@ Retrieve the current objective by running `aap-ls`.
 When adding new code (C++ classes and functions, but also scripting language implementations)
 add or update comments above the relevant code. The comment should explain the intended semantics,
 inputs, outputs, side effects, and important edge cases.
-Prefer slightly more documentation over terse or implicit behavior.
+
+If a header only contains the declaration then the comment should start with a brief description,
+mentioning all parameters being passed in a english sentence. Separated by an empty line (just
+containing `//`) it then can describe important things that a caller, who is not interested in
+the internal details, might want to know like when a function returns true, or what that means;
+or a remark about that it is a cheap function when that isn't obvious at all.
+
+Strongly prefer breaking comments right after a full-stop if the next sentence is more or less a new topic.
+Do not use two spaces after a full-stop if the comment continuous on the same line.
+
+For example
+```
+// Ensure that dwarf2's object-file registry has been populated before an address lookup tries to consult it.
+//
+// Returns false only when libcwd initialization recurses before the registry could be populated.
+// Repeated successful calls are cheap and leave the existing registry untouched.
+extern bool ensure_initialization(LIBCWD_TSD_PARAM);
+```
+
+Above definitions (as opposed to declarations), prefer slightly more documentation over terse
+or implicit behavior, but avoid duplication of documented behavior, side effects and/or return
+value that was already added to a header.
+
+# Style issue
+
+As a convention, out-of-class static member function definitions must have `//static`
+immediately in front of them (without space between `//` and `static`).
 
 # Available `aap-*` helpers.
 
@@ -43,11 +69,13 @@ Only use this when `$REPOROOT` uses CMake.
 
 Build the current project from the planner-specific build directory.
 
+Normally run this as `aap-build -- --quiet`.
+
 Only use this when `$REPOROOT` uses CMake.
 
 ## `aap-test [<ctest args>...]`
 
-tRun the tests for the current project. Optionally takes extra ctest arguments like `-R`.
+Run the tests for the current project. Optionally takes extra ctest arguments like `-R`.
 
 Only use this when `$REPOROOT` uses CMake.
 
@@ -57,6 +85,8 @@ Mark the current objective as achieved, then update `current_objective` to the
 first not-achieved <node> in lexicographic depth-first post-order traversal.
 
 <ref> must match the current objective.
+
+Normally the user will run this after reviewing all changes.
 
 ## `aap-previous`
 

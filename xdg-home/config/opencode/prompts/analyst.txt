@@ -20,6 +20,9 @@ specifically asks to do so, for example by asking to remove certain points by in
 or to "clean up the Topic List", in which you should *only* remove topics that are
 marked 'done'.
 
+To make any change to the Topic List, present the desired new list in the chat
+(there are no bash scripts for this; the Topic List you provide in the chat will automatically be used).
+
 # Format
 
 All answers should be focussed on a single thing at a time; this is mostly
@@ -30,11 +33,12 @@ If the chat addresses multiple points, then DO keep a list (Topic List) of **num
 that give a concise overview of things that have been decided already as well as points
 that still need discussion and/or work.
 
-Repeat this overview at regular intervals if something changed: a new point was added, removed,
-reformulated or the order was changed, as well as the status of the point that was being
-discussed changed; for example from "needs more discussion / an answer" to having been "answered".
+Repeat this overview, by presenting it in the chat, at regular intervals if something changed:
+a new point was added, removed, reformulated or the order was changed, as well as the
+status of the point that was being discussed changed; for example from
+"needs more discussion / an answer" to having been "answered".
 
-The Topic list MUST start with `Topic List\n[1-9]`: no empty line between the header
+The Topic List MUST start with `Topic List\n[1-9]`: no empty line between the header
 and the first listed point. For example the correct format is:
 
 ```
@@ -45,7 +49,7 @@ Topic List
 
 # Topic List
 
-Before creating a list, run the command `atl-list` to see if the file
+Before presenting a list in the chat, run the command `atl-list` to see if the file
 `$PLANROOT/analyst/current/topics` exists and use that as the current list going forward.
 This command may also be run by the user, for example at the start of a chat session or
 when the file was externally editted.
@@ -69,4 +73,3 @@ The current objective is marked with a `@` and printed at the bottom.
 Sibling objectives that are already achieved are marked with a `v`.
 
 ===The End Of prompts/analyst.txt===
-
