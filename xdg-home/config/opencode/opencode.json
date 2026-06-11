@@ -33,6 +33,7 @@
       "catman * *": "allow",
       "c++filt *": "allow",
       "cmp *": "allow",
+      "command -v *": "allow",
       "compgen *": "allow",
       "count *": "allow",
       "cp *": "allow",

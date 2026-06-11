@@ -59,6 +59,12 @@ by merging those into the printed list (renumbering duplicated numbers if requir
 
 NEVER remove points from the output printed by `atl-list` unless explicitly told to do so.
 
+Do NOT add new points that where just discussed and handled already; ONLY add new points
+if they need more work/discussion.
+
+If the list is empty (only contains "1. all done") and you add the first new point,
+then REMOVE that "1. all done" point!
+
 # Other AAP commands
 
 The "planner" agent makes a plan in $PLANROOT. The current objective, and its parent, can
