@@ -21,6 +21,12 @@ OTHER_HTTPS_DOMAINS=(
   docs.oracle.com
   man.archlinux.org
   cmake.org
+  man7.org
+  refspecs.linuxfoundation.org
+  sourceware.org
+  dumux.org
+  # debuginfod
+  debuginfod.archlinux.org
 )
 
 CHATGPT_IPV4=()
