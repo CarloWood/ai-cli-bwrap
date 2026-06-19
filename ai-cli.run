@@ -180,14 +180,14 @@ function cleanup_xephyr()
 
 function cleanup_nscodex()
 {
-  if cmp -s /usr/local/sbin/nft_add_allowed_IPs.sh netns/sbin/nft_add_allowed_IPs.sh; then
+  if cmp -s /usr/local/sbin/nft_add_allowed_IPs.sh /home/carlo/projects/github/ai-cli/ai-cli-bwrap/netns/sbin/nft_add_allowed_IPs.sh; then
     echo "Taking down nscodex because nft_add_allowed_IPs.sh was changed."
     # Take down the nscodex netns.
     # Removing `lo` and/or `veth` also removes `nft`, which depends on it;
     # `name` is taken down because nobody is using it anymore.
     sudo systemctl stop netns-lo@nscodex netns-veth@nscodex
     sudo /usr/local/sbin/nft_add_allowed_IPs.sh
-    cp /usr/local/sbin/nft_add_allowed_IPs.sh netns/sbin/nft_add_allowed_IPs.sh
+    cp /usr/local/sbin/nft_add_allowed_IPs.sh /home/carlo/projects/github/ai-cli/ai-cli-bwrap/netns/sbin/nft_add_allowed_IPs.sh
   else
     echo "NOT Removing nscodex netns."
   fi

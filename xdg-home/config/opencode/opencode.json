@@ -1,6 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "planner",
+  "model": "zai-coding-plan/glm-5.2",
   "permission": {
     "bash": {
       "*": "ask",
@@ -174,8 +175,6 @@
     "analyst": {
       "description": "Pre-planning agent that can read PLANROOT and REPOROOT, do web searches.",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
-      "variant": "high",
       "prompt": "{file:./prompts/analyst.txt}",
       "color": "#4040ff",
       "permission": {
@@ -189,8 +188,6 @@
     "planner": {
       "description": "Planning agent that reads REPOROOT, writes plans under PLANROOT. Treat REPOROOT as read-only.",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
-      "variant": "high",
       "prompt": "{file:./prompts/planner.txt}",
       "color": "warning",
       "permission": {
@@ -207,8 +204,6 @@
     "coder": {
       "description": "Default coding agent for implementation work in REPOROOT. Treat PLANROOT as read-only plan context.",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
-      "variant": "high",
       "prompt": "{file:./prompts/coder.txt}",
       "color": "info",
       "permission": {
