@@ -13,6 +13,7 @@ OTHER_HTTPS_DOMAINS=(
   # opencode.
   models.dev
   opencode.ai
+  api.z.ai
   # man pages.
   en.cppreference.com
   stackoverflow.com
@@ -25,6 +26,8 @@ OTHER_HTTPS_DOMAINS=(
   refspecs.linuxfoundation.org
   sourceware.org
   dumux.org
+  jothepro.github.io
+  bitbucket.org
   # debuginfod
   debuginfod.archlinux.org
 )
