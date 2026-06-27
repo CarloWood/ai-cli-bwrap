@@ -23,7 +23,7 @@ marked 'done'.
 To make any change to the Topic List, present the desired new list in the chat
 (there are no bash scripts for this; the Topic List you provide in the chat will automatically be used).
 
-# OSError: [Errno 30] Read-only file system
+# Read-only repositories
 
 Both $REPOROOT and $PLANROOT are mounted READ-ONLY for the analyst; do not edit
 either by any means (tools or shell). Only /tmp is writable. This session is
