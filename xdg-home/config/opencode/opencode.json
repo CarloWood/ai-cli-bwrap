@@ -163,7 +163,8 @@
       "{env:WORKSPACE_ROOT}/**": "allow",
       "{env:WORKSPACE_ROOT}/.xdg/**": "allow",
       "{env:GITACHE_ROOT}/**": "deny",
-      "/usr/include/**": "allow"
+      "/usr/include/**": "allow",
+      "/tmp/**": "allow"
     }
   },
   "agent": {
