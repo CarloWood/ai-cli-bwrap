@@ -588,7 +588,22 @@ if [[ -n "${AICLI_HOST_BUILD:-}" ]]; then
   )
 fi
 
-if [[ -n "${BUILDDIR:-}" && -d "$BUILDDIR" ]]; then
+# Container-side build directory setup.
+#
+# The AI does not use the host build directory contents here. BUILDDIR only
+# identifies the workspace-relative mount point where a persistent writable cache
+# should appear inside the container. Bubblewrap still needs the destination
+# mount point to exist under the read-only workspace bind, so create that empty
+# host directory when its parent already exists. The directory only acts as a
+# mount point; its contents are hidden by BUILDDIR_CACHE inside the container.
+if [[ -n "${BUILDDIR:-}" && ! -e "$BUILDDIR" ]]; then
+  BUILDDIR_PARENT="$(dirname -- "$BUILDDIR")"
+  if [[ -d "$BUILDDIR_PARENT" ]]; then
+    mkdir -p -- "$BUILDDIR"
+  fi
+fi
+
+if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
   if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
      BUILDDIR_BASE="$(realpath -s --relative-to="$WORKSPACE_ROOT" "$BUILDDIR")"
      # The build directory for the AI on the host (so it is cached over opencode restarts).
