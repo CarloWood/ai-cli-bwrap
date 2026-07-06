@@ -12,6 +12,7 @@ export WORKSPACE_ROOT=$HOME/workspace
 export HOME_AICLI=$HOME
 
 # Set up the CDEH environment.
+HISTSIZE=2000
 CDEH_ROOT=$HOME/cdeh
 source $CDEH_ROOT/env.bashrc
 
