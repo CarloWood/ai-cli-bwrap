@@ -14,6 +14,7 @@ OTHER_HTTPS_DOMAINS=(
   models.dev
   opencode.ai
   api.z.ai
+  api.code.umans.ai
   # man pages.
   en.cppreference.com
   stackoverflow.com

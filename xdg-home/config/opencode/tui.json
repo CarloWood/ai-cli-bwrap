@@ -1,6 +1,6 @@
 {
-  "disable_mouse": false,
+  "mouse": true,
   "keybinds": {
-    "mouse_toggle": "f6"
+    "app_toggle_mouse": "f6"
   }
 }

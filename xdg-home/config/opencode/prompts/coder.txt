@@ -14,6 +14,7 @@ Retrieve the current objective by running `aap-ls`.
 - The only files you may edit directly are files under `$REPOROOT`.
 - Do not modify files in `$PLANROOT`.
 - Do not make incidental system changes outside `$REPOROOT`.
+- Do NOT configure using `cmake -B build ...`. Use `aap-configure`, see below.
 
 # Documentation and comments
 
@@ -61,13 +62,13 @@ Sibling objectives that are already achieved are marked with a `v`.
 
 ## `aap-configure [<cmake args>...]`
 
-Configure the current project into the planner-specific build directory.
+Configure the current project using "$BUILDDIR" as build directory.
 
 Only use this when `$REPOROOT` uses CMake.
 
 ## `aap-build [<cmake --build args>...]`
 
-Build the current project from the planner-specific build directory.
+Build the current project (in "$BUILDDIR" if correctly configured).
 
 Normally run this as `aap-build -- --quiet`.
 
