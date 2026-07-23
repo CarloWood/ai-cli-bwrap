@@ -608,18 +608,19 @@ fi
 
 if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
   if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
-     BUILDDIR_BASE="$(realpath -s --relative-to="$WORKSPACE_ROOT" "$BUILDDIR")"
-     # The build directory for the AI on the host (so it is cached over opencode restarts).
-     BUILDDIR_CACHE="$HOME_AICLI/.cache/ai-cli/build"
-     mkdir -p "$BUILDDIR_CACHE"
-     bwrap_args+=(
-       # Always mount the BUILDDIR for the AI read-write at $WORKSPACE_ROOT/${BUILDDIR_BASE}.
-       # See `BUILDDIR="$WORKSPACE_ROOT/${BUILDDIR_BASE}"` in env.projects.
-       --bind "$BUILDDIR_CACHE" "${HOME_AICLI}/workspace/${BUILDDIR_BASE}"
-     )
-   else
-     echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
-   fi
+    echo "WE GET HERE"
+    # The build directory for the AI on the host (so it is cached over opencode restarts).
+    BUILDDIR_CACHE="$HOME_AICLI/.cache/ai-cli/build"
+    mkdir -p "$BUILDDIR_CACHE"
+    bwrap_args+=(
+      # Always mount a build directory root for the AI read-write at $WORKSPACE_ROOT/build.
+      # Where BUILDDIR then will be $WORKSPACE_ROOT/build/$CMAKE_CONFIG.
+      # See `BUILDDIR="$WORKSPACE_ROOT/${BUILDDIR_BASE}"` in env.projects.
+      --bind "$BUILDDIR_CACHE" "${HOME_AICLI}/workspace/build"
+    )
+  else
+    echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
+  fi
 fi
 
 if [[ -n ${AICLI_RUN_CLI:-} ]]; then
