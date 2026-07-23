@@ -608,7 +608,6 @@ fi
 
 if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
   if [[ "$BUILDDIR" == "$WORKSPACE_ROOT/"* ]]; then
-    echo "WE GET HERE"
     # The build directory for the AI on the host (so it is cached over opencode restarts).
     BUILDDIR_CACHE="$HOME_AICLI/.cache/ai-cli/build"
     mkdir -p "$BUILDDIR_CACHE"
