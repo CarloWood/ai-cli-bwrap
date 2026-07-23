@@ -182,6 +182,9 @@ function cleanup_nscodex()
 {
   if cmp -s /usr/local/sbin/nft_add_allowed_IPs.sh /home/carlo/projects/github/ai-cli/ai-cli-bwrap/netns/sbin/nft_add_allowed_IPs.sh; then
     echo "NOT Removing nscodex netns."
+    echo "To refresh IPs run:"
+    echo "sudo systemctl stop netns-lo@nscodex netns-veth@nscodex"
+    echo "sudo /usr/local/sbin/nft_add_allowed_IPs.sh"
   else
     echo "Taking down nscodex because nft_add_allowed_IPs.sh was changed."
     # Take down the nscodex netns.
