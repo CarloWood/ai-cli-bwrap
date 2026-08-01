@@ -1,8 +1,9 @@
 # This file must be sourced (with the full environment, including aliases, intact).
 # Use the alias `ai_cli` to use it.
 
-# Run sockettapd from its project directory.
-pre_path "/home/carlo/projects/github/ai-cli/ai-cli-sockettapd/build/src"
+# Run sockettapd from its build directory.
+SOCKETTAPD_WORKSPACE_ROOT="/home/carlo/projects/github/ai-cli/ai-cli-sockettapd"
+pre_path "$SOCKETTAPD_WORKSPACE_ROOT"/build/src
 
 # Sanity checks.
 if [ -z "$WORKSPACE_ROOT" ]; then
@@ -27,11 +28,6 @@ if [[ ! -d "/run/remountd" ]]; then
 fi
 if [[ "$HOME_AICLI" != "/opt/ext4/nvme2/codex" ]]; then
   echo "HOME_AICLI has an unexpected value."
-  exit 1
-fi
-if [ -z "$LIBCWD_RCFILE_OVERRIDE_NAME" ]; then
-  # This is just a sanity check to make sure that sockettapd will write debug output.
-  echo "Error: LIBCWD_RCFILE_OVERRIDE_NAME not set."
   exit 1
 fi
 if [ -z "${AICLI_RUN_CLI:-}" ]; then
@@ -210,6 +206,9 @@ function start_sockettapd()
   local name="$2"
 
   rm -f "$WORKSPACE_ROOT/sockettapd-$2.log"
+
+  # Make sure that sockettapd will write debug output.
+  export LIBCWD_RCFILE_OVERRIDE_NAME="$SOCKETTAPD_WORKSPACE_ROOT/libcwdrc_ai-cli-sockettapd"
 
   if [[ ! -r $LIBCWD_RCFILE_OVERRIDE_NAME ]]; then
     echo "LIBCWD_RCFILE_OVERRIDE_NAME is set to a non-existent or unreadable file ($LIBCWD_RCFILE_OVERRIDE_NAME)."
