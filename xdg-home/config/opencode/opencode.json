@@ -83,7 +83,8 @@
           "atl-show *": "allow"
         },
         "edit": {
-          "**/*": "allow"
+          "**/*": "allow",
+          ".opencode/**": "allow"
         }
       }
     }

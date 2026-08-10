@@ -73,6 +73,7 @@ resource
 # Support for aap-configure; build BetaTest by default.
 export AAP_BUILD_TYPE="BetaTest"
 export AAP_GENERATOR="Ninja"
+export BUILDDIR="$WORKSPACE_ROOT/build/$AAP_BUILD_TYPE"
 
 # Export abbreviate_path, because the AI needs it and opencode only provides it with exported stuff :/.
 declare -xf abbreviate_path
