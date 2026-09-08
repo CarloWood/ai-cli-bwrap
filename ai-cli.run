@@ -26,7 +26,7 @@ if [[ ! -d "/run/remountd" ]]; then
   echo "Error: /run/remountd does not exist. Run `systemctl enable --now remountd.socket`."
   exit 1
 fi
-if [[ "$HOME_AICLI" != "/opt/ext4/nvme2/codex" ]]; then
+if [[ "$HOME_AICLI" != "/opt/ext4/nvme2/aicli" ]]; then
   echo "HOME_AICLI has an unexpected value."
   exit 1
 fi

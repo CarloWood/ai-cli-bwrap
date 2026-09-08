@@ -54,7 +54,7 @@ GITACHE_ROOT=/opt/gitache
 
 # Set by 'project_environment'
 CODEX_HOME=/home/carlo/.codex
-HOME_AICLI=/opt/ext4/nvme2/codex
+HOME_AICLI=/opt/ext4/nvme2/aicli
 REPOROOT=/home/carlo/projects/github/ai-cli/opencode/opencode
 PLANROOT=/home/carlo/projects/github/ai-cli/opencode/opencode-AAP
 ```

@@ -135,7 +135,7 @@ The following environment variables are used by the script [ai-cli.run](ai-cli.r
 * <a id="REPOBASE_host">`REPOBASE`</a> : the path to the project repository relative to `$WORKSPACE_ROOT` (see `REPOROOT`).
 * <a id="REPOROOT_host">`REPOROOT`</a> : equal to `$WORKSPACE_ROOT/$REPOBASE`; the repository root of the current project.
 * <a id="CCACHE_DIR_host">`CCACHE_DIR`</a> : this path is mounted as tmpfs in the container so that if `CCACHE_DIR` is set to the same value inside the container then it can be used.
-* <a id="HOME_AICLI_host">`HOME_AICLI`</a> : equal to `/opt/ext4/nvme2/codex`, the HOME directory inside the container.
+* <a id="HOME_AICLI_host">`HOME_AICLI`</a> : equal to `/opt/ext4/nvme2/aicli`, the HOME directory inside the container.
 * <a id="CDEH_TMP_host">`CDEH_TMP`</a> : defined by [cdeh](https://carlowood.github.io/howto/cdeh.html). `$CDEH_TMP/env.base` is expected to contain the environment associated with the `/` (thus free of any project specific definitions) and will be copied to `$HOME_AICLI/cdeh/env.base` so that `cdeh` also works inside the container resulting in the same environment as on the host.
 * <a id="GITACHE_ROOT_host">`GITACHE_ROOT`</a> : will be bind-mounted read-write inside the container, sharing the [gitache](https://github.com/CarloWood/gitache) root with the host.
 * <a id="AICLI_EXTRA_WRITABLE_ROOTS_host">`AICLI_EXTRA_WRITABLE_ROOTS`</a> : a bash array with additional paths - not used by opencode.
@@ -146,15 +146,15 @@ The following environment variables are used by the script [ai-cli.run](ai-cli.r
 
 The following environment variables are changed and exported (if not already) by the `ai-cli.run` script:
 
-* <a id="HOME_container">`HOME`</a> : set to `HOME_AICLI` (`/opt/ext4/nvme2/codex`, see above).
+* <a id="HOME_container">`HOME`</a> : set to `HOME_AICLI` (`/opt/ext4/nvme2/aicli`, see above).
 * <a id="AICLI_MODE_container">`AICLI_MODE`</a> : one of `"shell"`, `"bash"`, `"analyst"`, `"planner"` or `"coder"`.
 * <a id="AICLI_RUN_CLI_container">`AICLI_RUN_CLI`</a> : defined to `"opencode"` (set by the `ai_cli` bash function, see above).
 
 <a a id="bashprofile"></a>
 The following environment variables are set by `~/.bash_profile` inside the container:
 
-* <a id="WORKSPACE_ROOT_container">`WORKSPACE_ROOT`</a> : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/codex/workspace`, the directory that is the bind-mount location for the host directory `$WORKSPACE_ROOT`.
-* <a id="HOME_AICLI_container">`HOME_AICLI`</a> : set to `$HOME` and therefore equal to `/opt/ext4/nvme2/codex` - the same value that it had on the host.
+* <a id="WORKSPACE_ROOT_container">`WORKSPACE_ROOT`</a> : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/aicli/workspace`, the directory that is the bind-mount location for the host directory `$WORKSPACE_ROOT`.
+* <a id="HOME_AICLI_container">`HOME_AICLI`</a> : set to `$HOME` and therefore equal to `/opt/ext4/nvme2/aicli` - the same value that it had on the host.
 * <a id="CDEH_ROOT_container">`CDEH_ROOT`</a> : set to `$HOME/cdeh`, aka `/opt/ext4/nvme2/ai-cli/cdeh`, the containers own [cdeh](https://carlowood.github.io/howto/cdeh.html) root. This directory contains the `env.bashrc` and `do_prompt` files copied by [`ai-cli.run`](ai-cli.run). Also the host file `$CDEH_TMP/env.base` (see above) was copied there by `ai-cli.run`. Finally it contains all `env.source` files that normally are printed by `pe` copied here as `env.host$nr`. All this is just needed to rebuild the environment inside the container (that is being documented here).
 * <a id="AICLI_INSIDE_ENVIRONMENT_container">`AICLI_INSIDE_ENVIRONMENT`</a> : set to `1`.
 * <a id="TOPPROJECT_container">`TOPPROJECT`</a> : set to `$WORKSPACE_ROOT`. Note that `env.compiler` is sourced from `$WORKSPACE_ROOT/env.compiler` these days; so not sure if changing `TOPPROJECT` makes sense here.
