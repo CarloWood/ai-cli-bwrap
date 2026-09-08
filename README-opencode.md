@@ -96,12 +96,12 @@ and `set_compiler_env`.
 
 Furthermore it sources [env.ai-cli](env.ai-cli), see [below](#envai-cli).
 
-Note that the function `project_environment` sources `$WORKSPACE_ROOT/env.compiler`.
+Note that the function `project_environment` sources `$TOPPROJECT/env.compiler`.
 
 ### `env.ai-cli`
 
 [This file](env.ai-cli) sets the environment variables [`HOME_AICLI`](#HOME_AICLI_host) and [`CODEX_HOME`](#CODEX_HOME_host)
-as well as defines the bash functions `codex` and `opencode`.
+as well as defines the bash functions `opencode` and `ava`.
 
 Note that the function `ai_cli` sources [`$HOME/projects/github/ai-cli/ai-cli.run`](ai-cli.run)
 that starts a bwrap container with optionally the Codex CLI or the OpenCode CLI running inside it.
@@ -122,8 +122,8 @@ at `~/.bash_profile` by `ai-cli.run`.
 
 Unlike the hosts `~/.bashrc` this files also sets project specific environment variables.
 It sets [`WORKSPACE_ROOT`](#WORKSPACE_ROOT_container), [`HOME_AICLI`](#HOME_AICLI_container), [`AICLI_INSIDE_ENVIRONMENT`](#AICLI_INSIDE_ENVIRONMENT_container),
-[`TOPPROJECT`](#TOPPROJECT_container), [`REPOROOT`](#REPOROOT_container), [`PATH`](#PATH_container), [`XDG_CACHE_HOME`](#XDG_CACHE_HOME_container) and
-[`OPENCODE_DISABLE_CHANNEL_DB`](#OPENCODE_DISABLE_CHANNEL_DB_container) and sets up the CDEH environment for inside the container, see [below](#bashprofile).
+[`TOPPROJECT`](#TOPPROJECT_container), [`REPOROOT`](#REPOROOT_container), [`PATH`](#PATH_container), [`XDG_CACHE_HOME`](#XDG_CACHE_HOME_container),
+[`OPENCODE_DISABLE_CHANNEL_DB`](#OPENCODE_DISABLE_CHANNEL_DB_container), and restores [`GITACHE_ROOT`](#GITACHE_ROOT_container) after setting up the CDEH environment for inside the container, see [below](#bashprofile).
 
 ## Environment variables
 
@@ -140,7 +140,7 @@ The following environment variables are used by the script [ai-cli.run](ai-cli.r
 * <a id="GITACHE_ROOT_host">`GITACHE_ROOT`</a> : will be bind-mounted read-write inside the container, sharing the [gitache](https://github.com/CarloWood/gitache) root with the host.
 * <a id="AICLI_EXTRA_WRITABLE_ROOTS_host">`AICLI_EXTRA_WRITABLE_ROOTS`</a> : a bash array with additional paths - not used by opencode.
 * <a id="AICLI_RUN_CLI_host">`AICLI_RUN_CLI`</a> : defined to `"opencode"` (set by the `ai_cli` bash function, see [above](#Starting-opencode)).
-* <a id="CODEX_HOME_host">`CODEX_HOME`</a> : set to `$HOME/.codex` (not used by `ai-cli.run` directly). This directory is bind-mounted at `~/.codex` in the container.
+* <a id="CODEX_HOME_host">`CODEX_HOME`</a> : set to `$HOME/.codex` (not used by `ai-cli.run` directly). This directory is bind-mounted at `~/.codex` in the container if `AICLI_RUN_CLI` is `"codex"`.
 
 ### Defined in the container (visible by `opencode`)
 
@@ -156,6 +156,7 @@ The following environment variables are set by `~/.bash_profile` inside the cont
 * <a id="WORKSPACE_ROOT_container">`WORKSPACE_ROOT`</a> : set to `$HOME/workspace` and therefore equal to `/opt/ext4/nvme2/aicli/workspace`, the directory that is the bind-mount location for the host directory `$WORKSPACE_ROOT`.
 * <a id="HOME_AICLI_container">`HOME_AICLI`</a> : set to `$HOME` and therefore equal to `/opt/ext4/nvme2/aicli` - the same value that it had on the host.
 * <a id="CDEH_ROOT_container">`CDEH_ROOT`</a> : set to `$HOME/cdeh`, aka `/opt/ext4/nvme2/ai-cli/cdeh`, the containers own [cdeh](https://carlowood.github.io/howto/cdeh.html) root. This directory contains the `env.bashrc` and `do_prompt` files copied by [`ai-cli.run`](ai-cli.run). Also the host file `$CDEH_TMP/env.base` (see above) was copied there by `ai-cli.run`. Finally it contains all `env.source` files that normally are printed by `pe` copied here as `env.host$nr`. All this is just needed to rebuild the environment inside the container (that is being documented here).
+* <a id="GITACHE_ROOT_container">`GITACHE_ROOT`</a> : set to `$HOME/gitache`, the path at which `GITACHE_ROOT_AICLI` is mounted inside the container. This assignment is made after `resource`, because rebuilding the CDEH environment sources the copied host `~/projects/env.source` and temporarily restores its host-only value `/opt/gitache`.
 * <a id="AICLI_INSIDE_ENVIRONMENT_container">`AICLI_INSIDE_ENVIRONMENT`</a> : set to `1`.
 * <a id="TOPPROJECT_container">`TOPPROJECT`</a> : set to `$WORKSPACE_ROOT`. Note that `env.compiler` is sourced from `$WORKSPACE_ROOT/env.compiler` these days; so not sure if changing `TOPPROJECT` makes sense here.
 * <a id="REPOROOT_container">`REPOROOT`</a> : set to `$WORKSPACE_ROOT/$REPOBASE`, and thus equal to the container directory that is the bind-mount location for the host `$REPOROOT`.

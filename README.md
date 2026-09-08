@@ -2,19 +2,19 @@
 
 This is a personal project, not necessarily intended to be used by others.
 
-Starts the Opencode CLI or OpenAI Codex CLI inside a bubblewrap container with full permissions,
+Starts the AVA, Opencode or OpenAI Codex CLI inside a bubblewrap container with full permissions,
 but limited severely by normal Linux access controls (network namespace `nsaicli`
 limiting all internet access to [white-listed domains](netns/nft-nsaicli.rules), using `bwrap` to only give
 read-access to what is required (e.g. not the users HOME directory, or `/etc`),
 and only give write access to required directories (workspace, gitache).
 
-Replace `codex` and `opencode` with the bash functions defined in [`env.ai-cli`](env.ai-cli),
+Replace `ava`, `opencode` and `codex` with the bash functions defined in [`env.ai-cli`](env.ai-cli),
 and have that load the main script [`ai-cli.run`](ai-cli.run).
 
 Usage:
 
 ```
-codex|opencode [planner|coder|bash <command>|shell|resume <session-id>]
+ava|opencode|codex [planner|coder|bash <command>|shell|resume <session-id>]
 ```
 
 Without a command line parameter the CLI opens the last used Session ID.

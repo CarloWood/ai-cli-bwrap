@@ -30,6 +30,10 @@ if [[ "$HOME_AICLI" != "/opt/ext4/nvme2/aicli" ]]; then
   echo "HOME_AICLI has an unexpected value."
   exit 1
 fi
+if [[ "$GITACHE_ROOT_AICLI" != "/opt/ext4/nvme2/aicli/gitache" ]]; then
+  echo "GITACHE_ROOT_AICLI has an unexpected value \"${GITACHE_ROOT_AICLI}\"."
+  exit 1
+fi
 if [ -z "${AICLI_RUN_CLI:-}" ]; then
   echo "Error: AICLI_RUN_CLI not set."
   exit 1
@@ -352,7 +356,7 @@ PLANBASE="$REPOBASE-AAP"
 # This is used for the environment (cdeh). The the cwd that commands are run in are determined by the the active agent.
 AICLI_CWD=$(realpath --no-symlinks "$HOME_AICLI/workspace/$REPOBASE/$AICLI_DIRECTORY")
 
-if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   echo "Running opencode..."
   # Construct command_args.
   if [[ $REPOBASE == "opencode" ]]; then
@@ -371,7 +375,7 @@ if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
       "opencode"
     )
   fi
-elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
+elif [[ $AICLI_RUN_CLI == "ava" ]]; then
   echo "Running AVA..."
   # Construct command_args.
   if [[ $REPOBASE == "AVA" ]]; then
@@ -389,7 +393,7 @@ elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
       "$AICLI_CWD"
     )
   fi
-elif [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
+elif [[ $AICLI_RUN_CLI == "codex" ]]; then
   echo "Running codex..."
   # Construct roots_json.
   if [[ $AICLI_MODE == "planner" ]]; then
@@ -397,9 +401,9 @@ elif [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
   elif [[ $AICLI_MODE == "coder" ]]; then
     roots_json='["'$HOME_AICLI'/workspace"'
   fi
-  # Note: this won't work if GITACHE_ROOT, CCACHE_DIR or HOME contain spaces or quotes.
+  # Note: this won't work if GITACHE_ROOT_AICLI, CCACHE_DIR or HOME contain spaces or quotes.
   # Also note that $HOME/.ssh will be mapped onto $HOME_AICLI/.ssh -- it isn't the real HOME.
-  for p in "${GITACHE_ROOT}" "${CCACHE_DIR}" "${HOME}/.ssh" "${AICLI_EXTRA_WRITABLE_ROOTS[@]}"; do
+  for p in "${GITACHE_ROOT_AICLI}" "${CCACHE_DIR}" "${HOME}/.ssh" "${AICLI_EXTRA_WRITABLE_ROOTS[@]}"; do
     roots_json+=",\"$p\""
   done
   roots_json+="]"
@@ -420,7 +424,7 @@ elif [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
     "--config" "sandbox_workspace_write.writable_roots=${roots_json}"
   )
 else
-  echo "Unknown CLI \"${AICLI_RUN_CLI}\""
+  echo "Unknown CLI \"$AICLI_RUN_CLI\""
   exit 1
 fi
 if [[ $AICLI_MODE == "shell" ]]; then
@@ -428,24 +432,22 @@ if [[ $AICLI_MODE == "shell" ]]; then
 elif [[ $AICLI_MODE == "bash" ]]; then
   command_args=("-lc" "$(quote_shell_words "$@")")
 elif [[ -n "$SESSION_ID" ]]; then
-  if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
+  if [[ $AICLI_RUN_CLI == "opencode" ]]; then
     command_args+=(-s "$SESSION_ID")
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
-  elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
+  elif [[ $AICLI_RUN_CLI == "ava" ]]; then
     command_args+=(--session "$SESSION_ID")
     if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
       command_args+=(--agent "$AICLI_MODE")
     fi
-  else
+  elif [[ $AICLI_RUN_CLI == "codex" ]]; then
     command_args+=(resume "$SESSION_ID")
   fi
 else
-  if [[ -n ${AICLI_RUN_CLI:-} ]]; then
-    if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
-      command_args+=(--agent "$AICLI_MODE")
-    fi
+  if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
+    command_args+=(--agent "$AICLI_MODE")
   fi
 fi
 
@@ -472,15 +474,14 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src
 # Start a pseudo X server. This creates a UNIX socket /tmp/.X11-unix/X100
 start_xephyr
 
-AGENT="${AICLI_RUN_CLI:-}"
-echo -e "Running $AGENT in \e[31m\"$AICLI_MODE\" mode\e[0m."
+echo -e "Running $AICLI_RUN_CLI in \e[31m\"$AICLI_MODE\" mode\e[0m."
 
 if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   # Start the sockettapd.
   killall sockettapd || true
   start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
   # Make the agent listen on the correct socket.
-  if [[ -z "${AICLI_RUN_CLI:-}" ]]; then
+  if [[ $AICLI_RUN_CLI == "codex" ]]; then
     command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
   fi
   # Note that for opencode we no longer use branch CW02-sockettap, but use plugin `AAP_support.js` instead.
@@ -572,7 +573,7 @@ bwrap_args=(
   # Set HOME to the desired directory.
   --setenv HOME "$HOME_AICLI"
   # The CLI needs write access to the gitache root.
-  --bind "$GITACHE_ROOT" "$GITACHE_ROOT"
+  --bind "$GITACHE_ROOT_AICLI" "$GITACHE_ROOT_AICLI"
   --perms $(mode_of /tmp) --tmpfs "$AICLI_CCACHE_DIR"
   # Change to the desired working directory before starting the CLI.
   --chdir "$AICLI_CWD"
@@ -620,7 +621,7 @@ if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
   fi
 fi
 
-if [[ -n ${AICLI_RUN_CLI:-} ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" || $AICLI_RUN_CLI == "ava" ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
@@ -642,7 +643,7 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
-if [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
+if [[ $AICLI_RUN_CLI == "codex" ]]; then
   bwrap_args+=(
     --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   )
@@ -660,10 +661,10 @@ export HOME REPOBASE AICLI_MODE AICLI_RUN_CLI OPENCODE_PURE AVA_PURE
 
 echo "REPOBASE=\"$REPOBASE\""
 echo "AICLI_MODE=\"$AICLI_MODE\""
-echo "AICLI_RUN_CLI=\"${AICLI_RUN_CLI:-}\""
-if [[ ${AICLI_RUN_CLI:-} == "opencode" ]]; then
+echo "AICLI_RUN_CLI=\"$AICLI_RUN_CLI\""
+if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   echo "OPENCODE_PURE=${OPENCODE_PURE-<unset>}"
-elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
+elif [[ $AICLI_RUN_CLI == "ava" ]]; then
   echo "AVA_PURE=${AVA_PURE-<unset>}"
 fi
 

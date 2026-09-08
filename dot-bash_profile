@@ -70,6 +70,10 @@ __cdeh_store_environment
 # Put it all together.
 resource
 
+# resource sources the copied host environment, where GITACHE_ROOT is /opt/gitache.
+# Restore the path at which that directory is mounted inside the container.
+export GITACHE_ROOT="$HOME_AICLI/gitache"
+
 # Support for aap-configure; build BetaTest by default.
 export AAP_BUILD_TYPE="BetaTest"
 export AAP_GENERATOR="Ninja"
