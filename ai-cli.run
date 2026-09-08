@@ -389,7 +389,7 @@ elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
       "$AICLI_CWD"
     )
   fi
-else
+elif [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
   echo "Running codex..."
   # Construct roots_json.
   if [[ $AICLI_MODE == "planner" ]]; then
@@ -419,6 +419,9 @@ else
     "--config" "sandbox_workspace_write.network_access=true"
     "--config" "sandbox_workspace_write.writable_roots=${roots_json}"
   )
+else
+  echo "Unknown CLI \"${AICLI_RUN_CLI}\""
+  exit 1
 fi
 if [[ $AICLI_MODE == "shell" ]]; then
   command_args=("-l")
@@ -470,7 +473,6 @@ sudo ln -sf "../lib/modules/$(uname -r)/build" "$HOME_AICLI/.bwrap-masks/usr_src
 start_xephyr
 
 AGENT="${AICLI_RUN_CLI:-}"
-[[ -n "$AGENT" ]] || AGENT="codex"
 echo -e "Running $AGENT in \e[31m\"$AICLI_MODE\" mode\e[0m."
 
 if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
@@ -537,7 +539,6 @@ bwrap_args=(
   "${ETC_FILES[@]}"
   --remount-ro /etc
   $(create_dirs /run/remountd) --bind /run/remountd /run/remountd
-  --bind /run/netns /run/netns
   # Mount an empty /usr/src with a linux symlink.
   --bind "$HOME_AICLI/.bwrap-masks/usr_src_linux" /usr/src      # We need to use --bind for the next line to work, then remount it to.
   # Add a nvim plugin to that that we're symlinking.
@@ -555,8 +556,6 @@ bwrap_args=(
   $(create_dirs "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER")
   --ro-bind "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER/projects/github/neovim-true-color-scheme-editor"
   --ro-bind "$HOST_XAUTHORITY" "$AICLI_XAUTHORITY"
-  # Only really needed for the Codex CLI, but well.
-  --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   # Mount the whole workspace as read-only.
   --ro-bind "$WORKSPACE_ROOT" "$HOME_AICLI/workspace"
   # Mount the PLANROOT and REPOROOT separately, so we can remount them using remountd.
@@ -643,18 +642,19 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
-if [[ $AICLI_RUN_CLI == "ava" && $REPOBASE == "AVA" ]]; then
+if [[ ${AICLI_RUN_CLI:-} == "codex" ]]; then
   bwrap_args+=(
-    --setenv RUST_BACKTRACE 1
+    --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   )
 fi
 
-if [[ -e "/var/run/docker.sock" ]]; then
-  bwrap_args+=(
-    $(create_dirs /var/run/docker.sock) --bind "/var/run/docker.sock" "/var/run/docker.sock"
-  )
-  COMMA_DOCKER=",docker"
-fi
+# Give access to docker.
+#if [[ -e "/var/run/docker.sock" ]]; then
+#  bwrap_args+=(
+#    $(create_dirs /var/run/docker.sock) --bind "/var/run/docker.sock" "/var/run/docker.sock"
+#  )
+#  COMMA_DOCKER=",docker"
+#fi
 
 export HOME REPOBASE AICLI_MODE AICLI_RUN_CLI OPENCODE_PURE AVA_PURE
 
@@ -680,4 +680,5 @@ sudo --preserve-env=REPOBASE,AICLI_MODE,AICLI_RUN_CLI,OPENCODE_PURE,AVA_PURE,OPE
     bwrap "${bwrap_args[@]}" \
       -- \
       setpriv --reuid 1000 --regid 1000 --groups 1000,remountd${COMMA_DOCKER:-} \
+        --inh-caps=-all --ambient-caps=-all --bounding-set=-all --no-new-privs \
         "$COMMAND" "${command_args[@]}"
