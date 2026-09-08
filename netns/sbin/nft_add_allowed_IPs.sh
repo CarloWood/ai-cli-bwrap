@@ -15,7 +15,7 @@ OTHER_HTTPS_DOMAINS=(
   opencode.ai
   api.z.ai
   api.code.umans.ai
-  # man pages.
+  # resources.
   en.cppreference.com
   stackoverflow.com
   www.geeksforgeeks.org
@@ -29,6 +29,7 @@ OTHER_HTTPS_DOMAINS=(
   dumux.org
   jothepro.github.io
   bitbucket.org
+  raw.githubusercontent.com
   # debuginfod
   debuginfod.archlinux.org
 )

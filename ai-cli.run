@@ -378,7 +378,7 @@ elif [[ ${AICLI_RUN_CLI:-} == "ava" ]]; then
     mkdir -p "$WORKSPACE_ROOT/host-build"
     AICLI_HOST_BUILD="${HOME_AICLI}/workspace/host-build"
     command_args=(
-      "$AICLI_HOST_BUILD/debug/ava"
+      "$AICLI_HOST_BUILD/ava"
       "--cwd"
       "$AICLI_CWD"
     )
