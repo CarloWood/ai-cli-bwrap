@@ -1,7 +1,7 @@
 ---
 description: Central implementation subagent for code changes ranging from quick fixes to broad refactors, migrations, and high-risk production work
 mode: subagent
-model: openai/gpt-5.3-codex
+model: openai/gpt-5.6-sol
 permission:
   bash:
     "aap-ls *": allow
