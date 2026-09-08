@@ -3,8 +3,8 @@
 This is a personal project, not necessarily intended to be used by others.
 
 Starts the Opencode CLI or OpenAI Codex CLI inside a bubblewrap container with full permissions,
-but limited severely by normal Linux access controls (network namespace `nscodex`
-limiting all internet access to [white-listed domains](netns/nft-nscodex.rules), using `bwrap` to only give
+but limited severely by normal Linux access controls (network namespace `nsaicli`
+limiting all internet access to [white-listed domains](netns/nft-nsaicli.rules), using `bwrap` to only give
 read-access to what is required (e.g. not the users HOME directory, or `/etc`),
 and only give write access to required directories (workspace, gitache).
 

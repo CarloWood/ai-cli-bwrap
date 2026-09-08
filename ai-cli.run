@@ -93,9 +93,9 @@ __cdeh_restore_host_environment
 #==============================================================================
 # This should become a new service.
 
-# Create netns nscodex (if it doesn't already exist).
-echo "Starting nscodex netns."
-sudo systemctl start netns-nft@nscodex.service
+# Create netns nsaicli (if it doesn't already exist).
+echo "Starting nsaicli netns."
+sudo systemctl start netns-nft@nsaicli.service
 
 # Exit immediately if any command fails.
 set -e
@@ -174,19 +174,19 @@ function cleanup_xephyr()
   flock -u 9
 }
 
-function cleanup_nscodex()
+function cleanup_nsaicli()
 {
   if cmp -s /usr/local/sbin/nft_add_allowed_IPs.sh /home/carlo/projects/github/ai-cli/ai-cli-bwrap/netns/sbin/nft_add_allowed_IPs.sh; then
-    echo "NOT Removing nscodex netns."
+    echo "NOT Removing nsaicli netns."
     echo "To refresh IPs run:"
-    echo "sudo systemctl stop netns-lo@nscodex netns-veth@nscodex"
+    echo "sudo systemctl stop netns-lo@nsaicli netns-veth@nsaicli"
     echo "sudo /usr/local/sbin/nft_add_allowed_IPs.sh"
   else
-    echo "Taking down nscodex because nft_add_allowed_IPs.sh was changed."
-    # Take down the nscodex netns.
+    echo "Taking down nsaicli because nft_add_allowed_IPs.sh was changed."
+    # Take down the nsaicli netns.
     # Removing `lo` and/or `veth` also removes `nft`, which depends on it;
     # `name` is taken down because nobody is using it anymore.
-    sudo systemctl stop netns-lo@nscodex netns-veth@nscodex
+    sudo systemctl stop netns-lo@nsaicli netns-veth@nsaicli
     sudo /usr/local/sbin/nft_add_allowed_IPs.sh
     cp /usr/local/sbin/nft_add_allowed_IPs.sh /home/carlo/projects/github/ai-cli/ai-cli-bwrap/netns/sbin/nft_add_allowed_IPs.sh
   fi
@@ -221,7 +221,7 @@ function start_sockettapd()
 }
 
 # Set trap for cleanup.
-trap cleanup_nscodex EXIT ERR
+trap cleanup_nsaicli EXIT ERR
 
 # We don't have the host X11 from this environment.
 unset XAUTHORITY
@@ -669,14 +669,14 @@ fi
 
 echo "Starting bwrap, command:"
 echo "sudo --preserve-env=REPOBASE,AICLI_MODE,AICLI_RUN_CLI,OPENCODE_PURE,AVA_PURE \\"
-echo "  ip netns exec nscodex \\"
+echo "  ip netns exec nsaicli \\"
 echo "    bwrap $(quote_args "${bwrap_args[@]}") \\"
 echo "      -- \\"
 echo "      setpriv --reuid 1000 --regid 1000 --groups 1000,remountd${COMMA_DOCKER:-} \\"
 echo "        $COMMAND $(quote_args "${command_args[@]}")"
 
 sudo --preserve-env=REPOBASE,AICLI_MODE,AICLI_RUN_CLI,OPENCODE_PURE,AVA_PURE,OPENCODE_DEBUG_SESSION \
-  ip netns exec nscodex \
+  ip netns exec nsaicli \
     bwrap "${bwrap_args[@]}" \
       -- \
       setpriv --reuid 1000 --regid 1000 --groups 1000,remountd${COMMA_DOCKER:-} \
