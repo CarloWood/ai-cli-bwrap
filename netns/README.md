@@ -1,10 +1,10 @@
-# nscodex network namespace configuration
+# nsaicli network namespace configuration
 
-These files are a backup of /etc/conf.d/netns/*codex*
+These files are a backup of `/etc/conf.d/netns/*nsaicli*`
 
-Required for the `sudo systemctl start netns-nft@nscodex.service` line in codex.run to work.
-To stop all services and take down nscodex cleanly, run:
-`sudo systemctl stop netns-lo@nscodex netns-veth@nscodex`.
+Required for the `sudo systemctl start netns-nft@nsaicli.service` line in codex.run to work.
+To stop all services and take down nsaicli cleanly, run:
+`sudo systemctl stop netns-lo@nsaicli netns-veth@nsaicli`.
 
 See https://github.com/CarloWood/systemd-netns which is required too.
 

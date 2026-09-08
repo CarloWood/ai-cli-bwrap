@@ -50,11 +50,11 @@ chatgpt_ipv4_csv=$(printf '%s\n' "${CHATGPT_IPV4[@]}" | sort -u | paste -sd, -)
 other_https_ipv4_csv=$(printf '%s\n' "${OTHER_HTTPS_IPV4[@]}" | sort -u | paste -sd, -)
 
 nft -f - <<EOF
-add table inet nscodex_firewall
-add set inet nscodex_firewall chatgpt_ipv4 { type ipv4_addr; }
-add set inet nscodex_firewall other_https_ipv4 { type ipv4_addr; }
-flush set inet nscodex_firewall chatgpt_ipv4
-flush set inet nscodex_firewall other_https_ipv4
-add element inet nscodex_firewall chatgpt_ipv4 { ${chatgpt_ipv4_csv} }
-add element inet nscodex_firewall other_https_ipv4 { ${other_https_ipv4_csv} }
+add table inet nsaicli_firewall
+add set inet nsaicli_firewall chatgpt_ipv4 { type ipv4_addr; }
+add set inet nsaicli_firewall other_https_ipv4 { type ipv4_addr; }
+flush set inet nsaicli_firewall chatgpt_ipv4
+flush set inet nsaicli_firewall other_https_ipv4
+add element inet nsaicli_firewall chatgpt_ipv4 { ${chatgpt_ipv4_csv} }
+add element inet nsaicli_firewall other_https_ipv4 { ${other_https_ipv4_csv} }
 EOF
