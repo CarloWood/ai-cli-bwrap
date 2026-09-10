@@ -3,7 +3,7 @@
 
 # Run sockettapd from its build directory.
 SOCKETTAPD_WORKSPACE_ROOT="/home/carlo/projects/github/ai-cli/ai-cli-sockettapd"
-pre_path "$SOCKETTAPD_WORKSPACE_ROOT"/build/src
+pre_path "$SOCKETTAPD_WORKSPACE_ROOT"/build/Release/src
 
 # Sanity checks.
 if [ -z "$WORKSPACE_ROOT" ]; then
