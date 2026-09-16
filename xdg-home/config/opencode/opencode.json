@@ -42,7 +42,6 @@
       "prompt": "{file:./prompts/analyst.txt}",
       "color": "#4040ff",
       "model": "openai/gpt-6-astra",
-      "variant": "high",
       "permission": {
         "bash": {
           "atl-list *": "allow",
