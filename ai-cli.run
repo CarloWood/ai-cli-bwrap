@@ -643,7 +643,11 @@ if [[ $AICLI_MODE != "planner" ]]; then
   )
 fi
 
-if [[ $AICLI_RUN_CLI == "codex" ]]; then
+if [[ $AICLI_RUN_CLI == "ava" ]]; then
+  bwrap_args+=(
+    --ro-bind "$GITACHE_ROOT" "$GITACHE_ROOT"
+  )
+elif [[ $AICLI_RUN_CLI == "codex" ]]; then
   bwrap_args+=(
     --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
   )
@@ -666,6 +670,7 @@ if [[ $AICLI_RUN_CLI == "opencode" ]]; then
   echo "OPENCODE_PURE=${OPENCODE_PURE-<unset>}"
 elif [[ $AICLI_RUN_CLI == "ava" ]]; then
   echo "AVA_PURE=${AVA_PURE-<unset>}"
+  echo "GITACHE_ROOT=${GITACHE_ROOT}"
 fi
 
 echo "Starting bwrap, command:"
