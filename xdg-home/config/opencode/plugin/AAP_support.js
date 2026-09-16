@@ -188,14 +188,14 @@ async function notifyIfChanged(sessionID, agentName, cwd) {
     // Can we switch repository root and current working directory here?
   }
 
+  lastSessionID = sessionID;
+  lastAgentName = agentName;
+  lastCwd = cwd;
+
   if (lastSessionID !== sessionID || lastAgentName !== agentName || lastCwd !== cwd) {
     const ok = await notify(sessionID, agentName, cwd);
     if (!ok) return;
   }
-
-  lastSessionID = sessionID;
-  lastAgentName = agentName;
-  lastCwd = cwd;
 }
 
 const execFileAsync = promisify(execFile);
