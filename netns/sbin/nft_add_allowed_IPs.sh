@@ -13,6 +13,7 @@ OTHER_HTTPS_DOMAINS=(
   # opencode.
   models.dev
   opencode.ai
+  models.opencode.ai
   api.z.ai
   api.code.umans.ai
   # resources.
