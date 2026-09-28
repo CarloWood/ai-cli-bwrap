@@ -549,9 +549,9 @@ bwrap_args=(
   # Mount the home directory; the CLI should never write here, therefore it is remounted ro below.
   $(create_dirs "$HOME_AICLI") --bind "$HOME_AICLI" "$HOME_AICLI"
   # ssh doesn't use HOME, so we have to add HOME_USER to the container. We need mode 755 because it will be owned by root inside the container.
-  --perms 755 --dir "$HOME_USER"
+  $(create_dirs "$HOME_USER/.ssh")
   # Use --bind so we can add to /home/carlo/.ssh/known_hosts from the shell. Other files are owned by root.
-  $(create_dirs "$HOME_USER/.ssh") --bind "$HOME_AICLI/.ssh" "$HOME_USER/.ssh"
+  --bind "$HOME_AICLI/.ssh" "$HOME_USER/.ssh"
   # Add individual directories from our home directory.
   $(create_dirs "$HOME_AICLI/.config/nvim" "$HOME_AICLI") --ro-bind "$HOME_USER/.config/nvim" "$HOME_AICLI/.config/nvim"
   $(create_dirs "$HOME_USER/projects/github/neovim-true-color-scheme-editor" "$HOME_USER")
@@ -633,13 +633,13 @@ fi
 if [[ $AICLI_MODE != "coder" ]]; then
   bwrap_args+=(
     # Mount the REPOROOT read-only.
-    --remount-ro "$HOME_AICLI/workspace/$REPOBASE"
+    --remount-ro "$(realpath $HOME_AICLI/workspace/$REPOBASE)"
   )
 fi
 if [[ $AICLI_MODE != "planner" ]]; then
   bwrap_args+=(
     # Mount the PLANROOT read-only.
-    --remount-ro "$HOME_AICLI/workspace/$PLANBASE"
+    --remount-ro "$(realpath $HOME_AICLI/workspace/$PLANBASE)"
   )
 fi
 
