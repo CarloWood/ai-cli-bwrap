@@ -479,7 +479,8 @@ echo -e "Running $AICLI_RUN_CLI in \e[31m\"$AICLI_MODE\" mode\e[0m."
 if [[ $AICLI_MODE != "bash" && $AICLI_MODE != "shell" ]]; then
   # Start the sockettapd.
   killall sockettapd || true
-  start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
+  # Is the sockettapd still used?
+  #start_sockettapd "$AICLI_MODE" "$(filenameify "$REPOBASE")"
   # Make the agent listen on the correct socket.
   if [[ $AICLI_RUN_CLI == "codex" ]]; then
     command_args+=(--config exec_socket_path="$HOME_AICLI/workspace/$PLANBASE/$AICLI_MODE.sock")
