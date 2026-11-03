@@ -2,7 +2,7 @@
 
 These files are a backup of `/etc/conf.d/netns/*nsaicli*`
 
-Required for the `sudo systemctl start netns-nft@nsaicli.service` line in codex.run to work.
+Required for the `sudo systemctl start netns-nft@nsaicli.service` line in ai-cli.run to work.
 To stop all services and take down nsaicli cleanly, run:
 `sudo systemctl stop netns-lo@nsaicli netns-veth@nsaicli`.
 

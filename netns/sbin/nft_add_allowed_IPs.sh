@@ -16,6 +16,9 @@ OTHER_HTTPS_DOMAINS=(
   models.opencode.ai
   api.z.ai
   api.code.umans.ai
+  # Anthropic
+  claude.ai
+  downloads.claude.ai
   # resources.
   en.cppreference.com
   stackoverflow.com
@@ -31,6 +34,8 @@ OTHER_HTTPS_DOMAINS=(
   jothepro.github.io
   bitbucket.org
   raw.githubusercontent.com
+  code.claude.com
+  www.anthropic.com
   # debuginfod
   debuginfod.archlinux.org
 )

@@ -63,7 +63,7 @@
           "atl-show *": "allow"
         },
         "edit": {
-          "**/*": "allow"
+          "{env:PLANROOT}/**": "allow"
         }
       }
     },
@@ -72,7 +72,7 @@
       "mode": "primary",
       "prompt": "{file:./prompts/coder.txt}",
       "color": "info",
-      "model": "openai/gpt-6-sol",
+      "model": "openai/gpt-6.1-sol",
       "permission": {
         "bash": {
           "aap-ls *": "allow",
