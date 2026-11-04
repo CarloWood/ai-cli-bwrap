@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/opt/ext4/nvme2/aicli/workspace",
+      "/usr/include",
+      "/tmp"
+    ],
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit(~/workspace/*-AAP/**)"
+    ],
+    "deny": [
+      "Read(~/gitache/**)",
+      "Edit(~/gitache/**)",
+      "Bash(atl-all-done *)",
+      "Bash(atl-merge *)",
+      "Bash(atl-reset *)",
+      "Bash(atl-switch *)",
+      "Bash(atl-update *)",
+      "Bash(ctx7 *)",
+      "Bash(npx *)"
+    ]
+  }
+}

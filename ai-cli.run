@@ -310,7 +310,7 @@ else
   # Process command line arguments and put them in `SESSION_ID` and/or `AICLI_MODE` respectively.
   while (($#)); do
     case "$1" in
-      -s|resume)
+      -s|resume|--resume)
         if (($# < 2)); then
           echo "Missing session ID after '$1'." >&2
           return 1
@@ -375,6 +375,12 @@ if [[ $AICLI_RUN_CLI == "opencode" ]]; then
       "opencode"
     )
   fi
+elif [[ $AICLI_RUN_CLI == "claude" ]]; then
+  echo "Running claude code..."
+  # Construct command_args.
+  command_args=(
+    "claude"
+  )
 elif [[ $AICLI_RUN_CLI == "ava" ]]; then
   echo "Running AVA..."
   # Construct command_args.
@@ -444,11 +450,28 @@ elif [[ -n "$SESSION_ID" ]]; then
     fi
   elif [[ $AICLI_RUN_CLI == "codex" ]]; then
     command_args+=(resume "$SESSION_ID")
+  elif [[ $AICLI_RUN_CLI == "claude" ]]; then
+    command_args+=(--resume "$SESSION_ID")
+    if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
+      command_args+=(--agent "$AICLI_MODE")
+    fi
   fi
 else
   if [[ $AICLI_MODE != "unknown" && $AICLI_MODE != "pure" ]]; then
     command_args+=(--agent "$AICLI_MODE")
   fi
+fi
+if [[ $AICLI_RUN_CLI == "claude" && $AICLI_MODE =~ ^(analyst|planner|coder)$ ]]; then
+  # Claude Code agent files can't express per-path or per-command permission rules,
+  # so each agent's permissions live in a settings file of their own (see xdg-home/config/claude/settings/).
+  command_args+=(--settings "$HOME_AICLI/workspace/.xdg/config/claude/settings/$AICLI_MODE.json")
+  # The agent files have an empty body, which keeps Claude Code's default system prompt;
+  # the role prompt of the agent is appended to that.
+  command_args+=(--append-system-prompt-file "$HOME_AICLI/workspace/.xdg/config/opencode/prompts/$AICLI_MODE.txt")
+  # Claude Code records the system prompt on a conversation's first request and keeps using that
+  # recording after --resume. Rebuild it on every request instead, so that resuming a session
+  # in a different mode (agent) also switches to the role prompt of that mode.
+  command_args+=(--system-prompt-snapshot off)
 fi
 
 # Build the bwrap argv tail (the --ro-bind pieces).
@@ -622,7 +645,7 @@ if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
   fi
 fi
 
-if [[ $AICLI_RUN_CLI == "opencode" || $AICLI_RUN_CLI == "ava" ]]; then
+if [[ $AICLI_RUN_CLI == "opencode" || $AICLI_RUN_CLI == "claude" || $AICLI_RUN_CLI == "ava" ]]; then
   bwrap_args+=(
     # This must be read-write because this directory is written to by multiple applications;
     # it contains contains XDG_CACHE_HOME, OpenCode's SQLite DB in XDG_DATA_HOME and XDG_CONFIG_HOME is
@@ -651,6 +674,19 @@ if [[ $AICLI_RUN_CLI == "ava" ]]; then
 elif [[ $AICLI_RUN_CLI == "codex" ]]; then
   bwrap_args+=(
     --bind "$HOME_USER/.codex" "$HOME_AICLI/.codex"
+  )
+elif [[ $AICLI_RUN_CLI == "claude" ]]; then
+  # Keep all of Claude Code's state (credentials, sessions, history and its .claude.json)
+  # in one directory that is only writable when running claude. Without CLAUDE_CONFIG_DIR
+  # Claude Code writes ~/.claude.json (plus lock and temp files next to it) in the read-only HOME.
+  CLAUDE_CONFIG_DIR_AICLI="$HOME_AICLI/.claude"
+  # Mount point for the agent definitions (analyst, planner, coder) that are kept in this repository.
+  mkdir -p "$CLAUDE_CONFIG_DIR_AICLI/agents"
+  bwrap_args+=(
+    --bind "$CLAUDE_CONFIG_DIR_AICLI" "$CLAUDE_CONFIG_DIR_AICLI"
+    # Read-only, so that Claude can't change its own agent definitions through ~/.claude/agents.
+    --ro-bind "$AICLI_XDG_ROOT/config/claude/agents" "$CLAUDE_CONFIG_DIR_AICLI/agents"
+    --setenv CLAUDE_CONFIG_DIR "$CLAUDE_CONFIG_DIR_AICLI"
   )
 fi
 

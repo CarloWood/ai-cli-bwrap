@@ -33,7 +33,14 @@ if [[ $HAVE_S_FUNCTION == "function" ]]; then
   fi
 fi
 
-if [[ -n $AICLI_RUN_CLI ]]; then
+if [[ $AICLI_RUN_CLI == "claude" ]]; then
+  # Claude Code doesn't read a user-level AGENTS.md; its user-level instructions file is $CLAUDE_CONFIG_DIR/CLAUDE.md.
+  if [[ -z "$CLAUDE_CONFIG_DIR" ]]; then
+    echo "start_ai_cli: ERROR: CLAUDE_CONFIG_DIR isn't set."
+    exit 1
+  fi
+  AGENTS_FILE="$CLAUDE_CONFIG_DIR/CLAUDE.md"
+elif [[ -n $AICLI_RUN_CLI ]]; then
   if [[ -z "$XDG_CONFIG_HOME" ]]; then
     echo "start_ai_cli: ERROR: XDG_CONFIG_HOME isn't set."
     exit 1
