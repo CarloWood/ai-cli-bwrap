@@ -1,3 +1,5 @@
 /cache/
 /data/
 /state/
+/config/gdb/substitute-path.gdb
+/config/konsolesshconfig

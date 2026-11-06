@@ -1,0 +1,24 @@
+#!/bin/bash
+# xsel-sync: sync PRIMARY and CLIPBOARD between the host display and Xephyr.
+
+A=${DISPLAY:-:0};   A_AUTH=${XAUTHORITY:-$HOME/.Xauthority}
+B=:100;             B_AUTH=$HOME/.Xauthority-xephyr
+
+declare -A last
+
+get() { XAUTHORITY=$2 timeout 1 xclip -d "$1" -selection "$3" -o 2>/dev/null; }
+put() { printf '%s' "$4" | XAUTHORITY=$2 xclip -d "$1" -selection "$3" -i; }
+
+while sleep 0.3; do
+  for sel in primary clipboard; do
+    a=$(get "$A" "$A_AUTH" $sel)
+    b=$(get "$B" "$B_AUTH" $sel)
+    if [[ -n $a && $a != "${last[$sel]}" ]]; then
+      last[$sel]=$a
+      [[ $b != "$a" ]] && put "$B" "$B_AUTH" $sel "$a"
+    elif [[ -n $b && $b != "${last[$sel]}" ]]; then
+      last[$sel]=$b
+      [[ $a != "$b" ]] && put "$A" "$A_AUTH" $sel "$b"
+    fi
+  done
+done

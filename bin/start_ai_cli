@@ -2,6 +2,8 @@
 
 echo "Running: start_ai_cli $@"
 echo "REPOROOT=\"$REPOROOT\", PLANROOT=\"$PLANROOT\", BUILDDIR=\"$BUILDDIR\", PWD=\"$PWD\""
+echo "AVA_DEBUG_TERMINAL=\"$AVA_DEBUG_TERMINAL\""
+echo "LIBCWD_RCFILE_OVERRIDE_NAME=\"$LIBCWD_RCFILE_OVERRIDE_NAME\""
 echo "HOME=$HOME, .bash_profile exists: $(test -f "$HOME/.bash_profile" && echo yes || echo no)"
 
 if [[ -z "$AICLI_INSIDE_ENVIRONMENT" ]]; then
@@ -63,7 +65,14 @@ if [[ $HAVE_MAKE_FUNCTION = "function" ]]; then
   make ctags
 fi
 
+# Start a WM.
+echo "DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"
+# Its output goes to a log instead of the terminal that the CLI is about to take over; /tmp is private to this sandbox.
+# Expect "Failed to read: session.*" lines (init only holds a few settings) and fbsetbg complaining that it can't
+# record ~/.fluxbox/lastwallpaper (read-only $HOME); both are harmless.
+fluxbox >/tmp/fluxbox.log 2>&1 &
+
 # Run the command that was passed to `start_ai_cli`.
-# Usually that is `/usr/bin/codex ...args...`, `opencode ...args...` or `/usr/bin/bun run dev -- ...args...`
+# Usually that is `claude ...args...`, `opencode ...args...` or `ava ...args...`
 # but it can also be `true` if the objective was to just (re)generate $XDG_CONFIG_HOME/opencode/AGENTS.md.
 exec "$@"

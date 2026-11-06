@@ -36,6 +36,8 @@ export XDG_CACHE_HOME="$WORKSPACE_ROOT/cache/xdg"
 export OPENCODE_DISABLE_CHANNEL_DB=1
 # Can't download debuginfo?
 unset DEBUGINFOD_URLS
+# We're not running a session bus in the container at the moment.
+unset DBUS_SESSION_BUS_ADDRESS
 # Need to export *everything* :(
 export CDEH_ROOT
 

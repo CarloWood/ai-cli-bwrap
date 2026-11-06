@@ -1,0 +1,20 @@
+# $XDG_CONFIG_HOME/gdb/gdbinit
+
+python
+import gdb, os
+
+class SourceExpanded(gdb.Command):
+    """Like 'source', but expands $VARIABLES and ~ in the file name."""
+    def __init__(self):
+        super().__init__("esource", gdb.COMMAND_SUPPORT, gdb.COMPLETE_FILENAME)
+
+    def invoke(self, arg, from_tty):
+        path = os.path.expanduser(os.path.expandvars(arg.strip()))
+        gdb.execute(f"source {path}", from_tty)
+
+SourceExpanded()
+end
+
+esource $XDG_CONFIG_HOME/gdb/substitute-path.gdb
+esource $XDG_CONFIG_HOME/gdb/bt_stop_at.py
+set backtrace stop-at ava::tui::TuiFrontEnd::run
