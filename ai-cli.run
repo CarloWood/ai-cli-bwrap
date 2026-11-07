@@ -396,12 +396,24 @@ elif [[ $AICLI_RUN_CLI == "claude" ]]; then
   command_args=(
     "claude"
   )
+  # Before entering the sandbox, point ~/.local/bin/claude at the newest downloaded version.
+  # Claude's own updater downloads new versions into $XDG_DATA_HOME/claude/versions (bound from $AICLI_XDG_ROOT) but
+  # cannot repoint this symlink from inside bwrap, which caused an endless "Update installed · Restart to update" loop.
+  # The link target is the in-sandbox path; it intentionally dangles on the host.
+  claude_versions_dir="$AICLI_XDG_ROOT/data/claude/versions"
+  claude_latest_version=$(/bin/ls "$claude_versions_dir" 2>/dev/null | sort -V | tail -n 1)
+  claude_current_version=$(basename "$(readlink "$HOME_AICLI/.local/bin/claude")")
+  if [[ -n $claude_latest_version && -x "$claude_versions_dir/$claude_latest_version" &&
+        "$claude_current_version" != "$claude_latest_version" ]]; then
+    echo "Updating to claude version $claude_latest_version"
+    ln -sfn "$HOME_AICLI/workspace/.xdg/data/claude/versions/$claude_latest_version" "$HOME_AICLI/.local/bin/claude"
+  fi
 elif [[ $AICLI_RUN_CLI == "ava" ]]; then
   echo "Running AVA..."
   # Construct command_args.
   if [[ $REPOBASE == "AVA" ]]; then
     mkdir -p "$WORKSPACE_ROOT/host-build"
-    AICLI_HOST_BUILD="${HOME_AICLI}/workspace/host-build"
+    AICLI_HOST_BUILD="$HOME_AICLI/workspace/host-build"
     command_args=(
       "$AICLI_HOST_BUILD/ava"
       "--cwd"
@@ -655,7 +667,7 @@ if [[ -n "${BUILDDIR:-}" && -d "$(dirname -- "$BUILDDIR")" ]]; then
       # Always mount a build directory root for the AI read-write at $WORKSPACE_ROOT/build.
       # Where BUILDDIR then will be $WORKSPACE_ROOT/build/$CMAKE_CONFIG.
       # See `BUILDDIR="$WORKSPACE_ROOT/${BUILDDIR_BASE}"` in env.projects.
-      --bind "$BUILDDIR_CACHE" "${HOME_AICLI}/workspace/build"
+      --bind "$BUILDDIR_CACHE" "$HOME_AICLI/workspace/build"
     )
   else
     echo "\e[31mWARNING: BUILDDIR ($BUILDDIR) is not a subdirectory of WORKSPACE_ROOT ($WORKSPACE_ROOT)!\e[0m"
